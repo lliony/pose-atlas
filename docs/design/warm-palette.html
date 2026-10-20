@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="zh-CN" data-scheme="paper">
+<head>
+<meta charset="utf-8" />
+<title>Pose Atlas · 暖色档案配色样张</title>
+<style>
+  /* ---------- 方案 A：纸本 Paper ---------- */
+  html[data-scheme="paper"]{
+    --paper:#F7F1E7; --surface:#FFFCF6; --sunken:#F0E6D6;
+    --line:#E3D7C4; --line-strong:#D3C2A8;
+    --ink:#2A2119; --ink-soft:#4E4034; --muted:#6E5A47; --faint:#9A866F;
+    --accent:#A5512B; --accent-hover:#8C4722; --accent-tint:#F5E3D0;
+    --brass:#B4884A; --olive:#5F6B3A; --amber:#8A5A2B; --brick:#A23B2A;
+    --card-edge:#D3C2A8; --shadow:0 10px 30px #2A21190d;
+  }
+  /* ---------- 方案 B：白墙 White Wall ---------- */
+  html[data-scheme="white"]{
+    --paper:#FFFFFF; --surface:#FFFFFF; --sunken:#F5F4F2;
+    --line:#E6E3DE; --line-strong:#D4D0C9;
+    --ink:#191817; --ink-soft:#454240; --muted:#6B6763; --faint:#9E9A94;
+    --accent:#AA4530; --accent-hover:#8A3223; --accent-tint:#F9EEEA;
+    --brass:#A98A5E; --olive:#56683C; --amber:#8A5A2B; --brick:#8E2B35;
+    --card-edge:#D4D0C9; --shadow:none;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    width:1240px; background:var(--paper); color:var(--ink);
+    font-family:"Microsoft YaHei",Arial,sans-serif; font-size:14px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sheet{padding:64px 68px 56px}
+  .head{display:flex; align-items:flex-start; justify-content:space-between; gap:48px}
+  .shift{flex:none; width:300px; border:1px solid var(--line); border-radius:10px; background:var(--surface); padding:16px 17px; margin-top:6px; box-shadow:var(--shadow)}
+  .shift h5{margin:0 0 12px; font-size:9px; letter-spacing:2px; color:var(--faint); font-weight:500}
+  .shift-row{display:flex; align-items:center; gap:6px; margin-bottom:9px}
+  .shift-row b{font-size:9.5px; color:var(--muted); width:34px; font-weight:500; letter-spacing:.5px}
+  .shift-row i{width:34px; height:26px; border-radius:4px; display:block; box-shadow:inset 0 0 0 1px #00000012}
+  .shift p{margin:11px 0 0; font-size:9.5px; line-height:1.9; color:var(--muted); border-top:1px solid var(--line); padding-top:10px}
+  .shift p em{font-style:normal; color:var(--accent-hover)}
+  .scheme-tag{display:inline-flex; align-items:center; gap:8px; margin-bottom:14px; padding:4px 10px 4px 4px; border:1px solid var(--line); border-radius:999px; font-size:9.5px; letter-spacing:1.6px; color:var(--muted); background:var(--surface)}
+  .scheme-tag b{background:var(--accent); color:var(--surface); border-radius:999px; padding:3px 9px; font-weight:600; letter-spacing:1px}
+
+  .eyebrow{font-size:10px; letter-spacing:2.6px; color:var(--muted); text-transform:uppercase}
+  h1{font-family:Georgia,"Songti SC","SimSun",serif; font-weight:400; font-size:56px; line-height:1.15; margin:18px 0 12px; letter-spacing:2px}
+  h1 em{font-style:normal; color:var(--accent)}
+  .lede{font-size:13px; color:var(--muted); max-width:600px; line-height:2}
+  .meta{display:flex; gap:24px; margin-top:22px; font-size:10px; color:var(--muted); letter-spacing:.6px; flex-wrap:wrap}
+  .meta span{display:flex; align-items:center; gap:7px}
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--olive)}
+
+  .rule{height:1px; background:var(--line); margin:44px 0 34px}
+
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:20px}
+  .sec-head h2{font-family:Georgia,"Songti SC","SimSun",serif; font-weight:400; font-size:22px; margin:0; letter-spacing:1px}
+  .sec-head span{font-size:10px; letter-spacing:2px; color:var(--faint)}
+
+  .swatches{display:grid; grid-template-columns:repeat(4,1fr); gap:18px}
+  .sw{background:var(--surface); border:1px solid var(--line); border-radius:10px; overflow:hidden; box-shadow:var(--shadow)}
+  .sw .chip{height:92px; display:flex; align-items:flex-end; justify-content:space-between; padding:12px 14px}
+  .sw .chip b{font-family:ui-monospace,Consolas,monospace; font-size:11px; letter-spacing:.6px; font-weight:500}
+  .sw .body{padding:13px 14px 15px; border-top:1px solid var(--line)}
+  .sw .name{font-size:12.5px; font-weight:600; letter-spacing:.4px}
+  .sw .token{font-family:ui-monospace,Consolas,monospace; font-size:10px; color:var(--faint); margin-top:2px}
+  .sw .use{font-size:10.5px; color:var(--muted); margin-top:8px; line-height:1.65}
+
+  .note{display:flex; gap:10px; align-items:flex-start; margin-top:16px; padding:12px 15px; border-left:2px solid var(--brass); background:var(--sunken); font-size:10.5px; color:var(--muted); line-height:1.85}
+  .note b{color:var(--ink-soft); font-weight:600}
+
+  /* preview */
+  .preview{border:1px solid var(--card-edge); border-radius:14px; background:var(--paper); overflow:hidden; box-shadow:var(--shadow)}
+  .pv-top{display:flex; align-items:center; gap:10px; padding:13px 18px; border-bottom:1px solid var(--line); background:var(--surface)}
+  .mark{width:28px; height:32px; border-radius:3px; background:var(--ink); color:var(--paper); font-family:Georgia,serif; font-size:19px; line-height:32px; text-align:center; flex:none}
+  .pv-brand{font-family:Georgia,serif; font-size:15px; letter-spacing:1.4px; line-height:1.1}
+  .pv-brand small{display:block; font-family:"Microsoft YaHei"; font-size:6.5px; letter-spacing:2.4px; color:var(--faint); margin-top:3px; font-style:normal}
+  .pv-tabs{display:flex; align-items:center; gap:2px; margin-left:14px}
+  .tab{padding:7px 13px; border-radius:8px; font-size:11.5px; color:var(--muted)}
+  .tab.on{background:var(--accent-tint); color:var(--accent-hover); font-weight:600; box-shadow:inset 0 0 0 1px #E8CFB4}
+  .pv-spacer{flex:1}
+  .ghost{padding:6px 10px; border-radius:7px; border:1px solid var(--line-strong); font-size:10.5px; color:var(--muted); background:var(--surface)}
+  .cta{padding:8px 14px; border-radius:8px; background:var(--accent); color:var(--surface); font-size:11.5px; font-weight:600; letter-spacing:.3px}
+
+  .pv-status{display:flex; align-items:center; gap:9px; padding:7px 18px; background:var(--sunken); border-bottom:1px solid var(--line); font-size:9.5px; color:var(--muted); letter-spacing:.4px}
+  .pv-status b{color:var(--ink-soft); font-weight:600}
+  .pv-status i{font-style:normal; color:var(--line-strong)}
+
+  .pv-main{padding:20px 18px 18px; background:var(--paper)}
+  .pv-eyebrow{font-size:8.5px; letter-spacing:2.2px; color:var(--faint)}
+  .pv-title{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-top:5px}
+  .pv-title h3{font-family:Georgia,"Songti SC","SimSun",serif; font-weight:400; font-size:27px; margin:0; letter-spacing:1.5px}
+  .pv-title h3 small{font-family:"Microsoft YaHei"; font-size:8px; letter-spacing:2px; color:var(--faint); margin-left:9px; vertical-align:middle}
+  .pv-actions{display:flex; gap:7px}
+
+  .pills{display:flex; gap:6px; margin-top:15px; flex-wrap:wrap}
+  .pill{padding:5px 11px; border-radius:999px; font-size:10.5px; color:var(--muted); border:1px solid var(--line); background:var(--surface)}
+  .pill b{color:var(--faint); font-weight:500; margin-left:5px; font-size:9.5px}
+  .pill.on{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+  .pill.on b{color:#B9A78F}
+
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px}
+  .card{border:1px solid var(--card-edge); border-radius:9px; overflow:hidden; background:var(--surface); display:flex; flex-direction:column; box-shadow:var(--shadow)}
+  .photo{position:relative; aspect-ratio:4/3; background:var(--sunken)}
+  .photo img{width:100%; height:100%; object-fit:cover; object-position:center 34%; display:block; filter:saturate(.94) contrast(.99)}
+  .code{position:absolute; left:10px; top:10px; background:var(--surface); opacity:.94; color:var(--ink); font-family:ui-monospace,Consolas,monospace; font-size:9px; letter-spacing:.8px; padding:3px 7px; border-radius:4px}
+  .lens{position:absolute; left:10px; bottom:10px; background:var(--ink); opacity:.88; color:var(--paper); font-family:ui-monospace,Consolas,monospace; font-size:8.5px; letter-spacing:.7px; padding:3px 7px; border-radius:4px}
+  .fav{position:absolute; right:10px; top:10px; width:20px; height:20px; border-radius:50%; background:var(--surface); opacity:.9; color:var(--muted); font-size:9px; line-height:20px; text-align:center}
+  .c-body{padding:12px 13px 0}
+  .c-body h4{font-size:13px; font-weight:600; margin:0; letter-spacing:.3px}
+  .tags{font-size:9.5px; color:var(--faint); margin-top:5px; letter-spacing:.3px}
+  .tags em{font-style:normal; color:var(--line-strong); padding:0 4px}
+  .c-foot{margin-top:auto; display:flex; align-items:center; justify-content:space-between; padding:9px 13px; border-top:1px solid var(--line); font-size:9px; color:var(--muted); background:var(--paper)}
+  .chip-mini{padding:2px 6px; border-radius:4px; background:var(--accent-tint); color:var(--accent-hover); font-size:8.5px; font-weight:600; letter-spacing:.4px}
+
+  /* comparison */
+  .cmp{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .cmp-card{border-radius:12px; padding:16px 18px 18px; border:1px solid var(--line)}
+  .cmp-card.a{background:#F7F1E7; border-color:#E3D7C4}
+  .cmp-card.b{background:#FFFFFF; border-color:#D4D0C9; box-shadow:0 1px 2px #1918170a}
+  .cmp-card h4{margin:0; font-size:11.5px; letter-spacing:1px; display:flex; align-items:center; justify-content:space-between}
+  .cmp-chip{display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:7px; background:#A5512B; color:#FFFCF6; font-size:10.5px; font-weight:600}
+  .cmp-card.b .cmp-chip{background:#AA4530; color:#FFFFFF}
+  .cmp-line{margin-top:10px; height:1px; background:#E3D7C4}
+  .cmp-card.b .cmp-line{background:#E6E3DE}
+  .cmp-card p{margin:10px 0 0; font-size:10px; line-height:1.9; color:#6E5A47}
+  .cmp-card.b p{color:#6B6763}
+  .diff{display:grid; grid-template-columns:repeat(3,1fr); gap:0 26px; margin-top:18px; border-top:1px solid var(--line)}
+  .diff div{padding:12px 0 0; font-size:10px; color:var(--muted); line-height:1.75}
+  .diff b{display:block; font-size:8.5px; letter-spacing:1.6px; color:var(--faint); margin-bottom:4px; font-weight:500}
+
+  /* table */
+  table{width:100%; border-collapse:collapse; font-size:11px}
+  th{text-align:left; font-weight:500; color:var(--faint); font-size:9.5px; letter-spacing:1.4px; padding:0 0 9px}
+  td{padding:9px 0; border-top:1px solid var(--line); color:var(--muted)}
+  td.sample{width:150px}
+  .aa{font-family:ui-monospace,Consolas,monospace; padding:3px 8px; border-radius:999px; font-size:9.5px; background:var(--accent-tint); color:var(--accent-hover)}
+  .aaa{background:#E6EAD8; color:#5F6B3A}
+  .num{font-family:ui-monospace,Consolas,monospace; color:var(--ink-soft)}
+
+  /* dark strip */
+  .dark{background:#1B1511; border-radius:14px; padding:26px 28px; color:#F3E6D3; margin-top:6px}
+  .dark .eyebrow{color:#B39C83}
+  .dark h2{font-family:Georgia,"Songti SC","SimSun",serif; font-weight:400; font-size:21px; margin:8px 0 18px; letter-spacing:1px}
+  .dsw{display:grid; grid-template-columns:repeat(6,1fr); gap:12px}
+  .dsw div span{display:block; height:52px; border-radius:8px; border:1px solid #3A2E24}
+  .dsw div b{display:block; font-family:ui-monospace,Consolas,monospace; font-size:9.5px; color:#B39C83; margin-top:7px; font-weight:400}
+  .dsw div i{display:block; font-size:9.5px; color:#D8C6AC; font-style:normal; margin-top:1px}
+  .dnote{font-size:10px; color:#B39C83; margin-top:16px; line-height:1.9}
+
+  .use-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .use-card{border:1px solid var(--line); border-radius:10px; padding:16px 18px; background:var(--surface); box-shadow:var(--shadow)}
+  .use-card h4{font-size:11px; letter-spacing:1.6px; margin:0 0 10px; color:var(--accent)}
+  .use-card.no h4{color:var(--brick)}
+  .use-card ul{margin:0; padding-left:15px; font-size:10.5px; color:var(--muted); line-height:2}
+
+  footer{display:flex; justify-content:space-between; margin-top:34px; padding-top:14px; border-top:1px solid var(--line); font-size:9px; color:var(--faint); letter-spacing:.6px}
+
+  .only-white{display:none}
+  html[data-scheme="white"] .only-white{display:flex}
+  html[data-scheme="white"] .only-paper{display:none}
+
+  /* ---- B 的结构差异：白墙用描边，不用色块 ---- */
+  html[data-scheme="white"] .tab.on{background:#FFFFFF; color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent)}
+  html[data-scheme="white"] .pill.on{background:#FFFFFF; color:var(--accent); border-color:var(--accent); font-weight:600}
+  html[data-scheme="white"] .pill.on b{color:var(--accent)}
+  html[data-scheme="white"] .card{box-shadow:none; border-color:var(--line)}
+  html[data-scheme="white"] .c-foot{background:transparent}
+  html[data-scheme="white"] .chip-mini{background:transparent; box-shadow:inset 0 0 0 1px var(--line-strong); color:var(--accent)}
+  html[data-scheme="white"] .sw,
+  html[data-scheme="white"] .shift,
+  html[data-scheme="white"] .use-card{box-shadow:none}
+  html[data-scheme="white"] .preview{box-shadow:0 1px 2px #1918170a}
+  html[data-scheme="white"] .note{border-left-color:var(--accent)}
+  html[data-scheme="white"] .shift-row i{box-shadow:inset 0 0 0 1px #00000014}
+  html[data-scheme="white"] .cta{color:#FFFFFF}
+  html[data-scheme="white"] .lens{background:#191817; opacity:.86; color:#FFFFFF}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="head">
+    <div>
+      <div class="scheme-tag"><b id="tagName">方案 A</b><span id="tagDesc">纸本 · PAPER</span></div>
+      <h1 id="title">暖色档案 <em>Amber Archive</em></h1>
+      <p class="lede" id="lede">
+        把原来的深绿换成深烘焙的褐色，把冷米白推进到被阳光晒过的纸色；<br>
+        强调色只留一种——陶土橙，像暗房红灯落在相纸上。其余全部让位给照片。
+      </p>
+      <div class="meta">
+        <span><b>基底</b> <span id="m1">暖纸 + 暖白</span></span>
+        <span><b>强调</b> 陶土橙（唯一）</span>
+        <span><b>文字</b> 深褐而非纯黑</span>
+        <span><span class="dot"></span>WCAG AA 已校验</span>
+      </div>
+    </div>
+    <div class="shift">
+      <h5>配色位移 / SHIFT</h5>
+      <div class="shift-row"><b>现在</b>
+        <i style="background:#203C34"></i><i style="background:#244D40"></i><i style="background:#F8F7F3"></i><i style="background:#EAF0E9"></i>
+      </div>
+      <div class="shift-row"><b>调整后</b>
+        <i style="background:var(--ink)"></i><i style="background:var(--accent)"></i><i style="background:var(--paper)"></i><i style="background:var(--accent-tint)"></i>
+      </div>
+      <p id="shiftNote">墨绿 → 墨褐；深绿 → <em>陶土橙</em>；冷米白 → 暖纸；薄荷灰 → 陶土薄雾。色相整体顺时针转了约 150°，明度关系保持不变。</p>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>基底与纸面</h2><span>BASE</span></div>
+  <div class="swatches">
+    <div class="sw">
+      <div class="chip" style="background:var(--paper)"><b style="color:var(--muted)">PAPER</b></div>
+      <div class="body"><div class="name" id="n-paper">暖纸</div><div class="token" id="v-paper">#F7F1E7 · paper</div><div class="use" id="u-paper">页面底色。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--surface)"><b style="color:var(--muted)">SURFACE</b></div>
+      <div class="body"><div class="name" id="n-surface">暖白卡面</div><div class="token" id="v-surface">#FFFCF6 · surface</div><div class="use" id="u-surface">卡片、弹窗、输入框。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--sunken)"><b style="color:var(--muted)">SUNKEN</b></div>
+      <div class="body"><div class="name" id="n-sunken">沉纸</div><div class="token" id="v-sunken">#F0E6D6 · sunken</div><div class="use" id="u-sunken">侧栏、状态条、次级区块。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--line-strong)"><b style="color:var(--ink-soft)">LINE</b></div>
+      <div class="body"><div class="name" id="n-line">暖线</div><div class="token" id="v-line">#E3D7C4 · line</div><div class="use" id="u-line">1px 分隔线与卡片描边。</div></div>
+    </div>
+  </div>
+  <div class="note only-white"><b>白墙的关键不是白，是没有色温。</b>页面与卡面同是纯白，中性色一律用不带褐的 #6B6763，结构只靠 1px #E6E3DE 细线；暖色退到只剩陶土红与铜线——填充越少，墙越像墙。</div>
+  <div class="note only-paper"><b>纸本的关键是三层纸。</b>paper → surface → sunken 三段明度差很小但可辨，阴影只作辅助；线一律 1px，宁可多留白，不叠加阴影。</div>
+
+  <div class="sec-head" style="margin-top:30px"><h2>文字层级</h2><span>TEXT</span></div>
+  <div class="swatches">
+    <div class="sw">
+      <div class="chip" style="background:var(--ink)"><b style="color:var(--paper)">INK</b></div>
+      <div class="body"><div class="name" id="n-ink">墨褐</div><div class="token" id="v-ink">#2A2119 · ink</div><div class="use" id="u-ink">主文本。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--ink-soft)"><b style="color:var(--paper)">INK-SOFT</b></div>
+      <div class="body"><div class="name" id="n-inksoft">次级褐</div><div class="token" id="v-inksoft">#4E4034 · ink-soft</div><div class="use" id="u-inksoft">小标题、图标、表格正文。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--muted)"><b style="color:var(--paper)">MUTED</b></div>
+      <div class="body"><div class="name" id="n-muted">灰褐</div><div class="token" id="v-muted">#6E5A47 · muted</div><div class="use" id="u-muted">说明文字、元信息。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--faint)"><b style="color:var(--ink)">FAINT</b></div>
+      <div class="body"><div class="name" id="n-faint">浅褐</div><div class="token" id="v-faint">#9A866F · faint</div><div class="use" id="u-faint">仅装饰性微文案与占位符。</div></div>
+    </div>
+  </div>
+
+  <div class="sec-head" style="margin-top:30px"><h2>强调与信号</h2><span>ACCENT · STATUS</span></div>
+  <div class="swatches">
+    <div class="sw">
+      <div class="chip" style="background:var(--accent)"><b style="color:var(--surface)">ACCENT</b></div>
+      <div class="body"><div class="name" id="n-accent">陶土橙</div><div class="token" id="v-accent">#A5512B · accent</div><div class="use" id="u-accent">主按钮、选中态、链接。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--accent-hover)"><b style="color:var(--surface)">ACCENT-HOVER</b></div>
+      <div class="body"><div class="name" id="n-accentsoft">深陶土</div><div class="token" id="v-accentsoft">#8C4722 · accent-hover</div><div class="use" id="u-accentsoft">hover / 按下，浅底彩字。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--accent-tint)"><b style="color:var(--accent-hover)">ACCENT-TINT</b></div>
+      <div class="body"><div class="name" id="n-tint">陶土薄雾</div><div class="token" id="v-tint">#F5E3D0 · accent-tint</div><div class="use" id="u-tint">选中 pill、标签底、提示块。</div></div>
+    </div>
+    <div class="sw">
+      <div class="chip" style="background:var(--brass)"><b style="color:#3A2A18">BRASS</b></div>
+      <div class="body"><div class="name" id="n-brass">黄铜</div><div class="token" id="v-brass">#B4884A · brass</div><div class="use" id="u-brass">只作编号刻线、图章描边，不承载正文。</div></div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>放进界面里</h2><span>IN CONTEXT</span></div>
+  <div class="preview">
+    <div class="pv-top">
+      <div class="mark">P</div>
+      <div class="pv-brand">Pose Atlas<small>STUDIO ARCHIVE</small></div>
+      <div class="pv-tabs">
+        <div class="tab on">Generate</div>
+        <div class="tab">Modify</div>
+        <div class="tab">Preview</div>
+      </div>
+      <div class="pv-spacer"></div>
+      <div class="ghost">导出合集</div>
+      <div class="cta">＋ 新建卡片</div>
+    </div>
+    <div class="pv-status"><span>◉</span> <b>CALIBRATED VIEWPORT</b> <i>·</i> 总库位 <b>1,482</b> 组 <i>·</i> 已校准 98.4%</div>
+    <div class="pv-main">
+      <div class="pv-eyebrow">ARCHIVE TELEMETRY · 专业姿势与布光构图索引</div>
+      <div class="pv-title">
+        <h3>姿势库与现场检索<small>POSE GALLERY &amp; DIRECTIVES</small></h3>
+        <div class="pv-actions"><div class="ghost">批量加入卡片册</div><div class="ghost">导入官方示例</div></div>
+      </div>
+      <div class="pills">
+        <span class="pill on">全部姿势 <b>1,482</b></span>
+        <span class="pill">人像写真 <b>418</b></span>
+        <span class="pill">户外街拍 <b>324</b></span>
+        <span class="pill">室内影棚 <b>260</b></span>
+        <span class="pill">情绪胶片 <b>195</b></span>
+        <span class="pill">婚礼情侣 <b>142</b></span>
+        <span class="pill">商业静物 <b>88</b></span>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="photo">
+            <img src="img/pose-portrait.jpg" alt="" />
+            <div class="code">IP-101</div><div class="fav">♥</div>
+            <div class="lens">85mm · f/2.0 · ISO 100</div>
+          </div>
+          <div class="c-body">
+            <h4>借墙回响 · 呼吸感侧影</h4>
+            <div class="tags">侧光<em>·</em>胸像<em>·</em>低饱和</div>
+          </div>
+          <div class="c-foot"><span>胸部以上 · 平视</span><span class="chip-mini">人像写真</span></div>
+        </div>
+        <div class="card">
+          <div class="photo">
+            <img src="img/pose-street.jpg" alt="" />
+            <div class="code">IP-102</div><div class="fav">♥</div>
+            <div class="lens">35mm · f/1.4 · ISO 400</div>
+          </div>
+          <div class="c-body">
+            <h4>建筑步道 · 动态大步</h4>
+            <div class="tags">逆光<em>·</em>全身<em>·</em>街头</div>
+          </div>
+          <div class="c-foot"><span>全身动态 · 仰视 20°</span><span class="chip-mini">户外街拍</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>A 与 B 的差异</h2><span>PAPER vs WHITE WALL</span></div>
+  <div class="cmp">
+    <div class="cmp-card a">
+      <h4>方案 A · 纸本<span class="cmp-chip">＋ 新建卡片</span></h4>
+      <small style="font-family:ui-monospace,Consolas,monospace;color:#8B7C6B;font-size:9px">paper #F7F1E7 / accent #A5512B</small>
+      <div class="cmp-line"></div>
+      <p>暖纸底 + 暖褐中性。选中态是「橙雾填充 + 深陶土字」，卡片自带纸的重量感，适合档案与打印。</p>
+    </div>
+    <div class="cmp-card b">
+      <h4>方案 B · 白墙<span class="cmp-chip">＋ 新建卡片</span></h4>
+      <small style="font-family:ui-monospace,Consolas,monospace;color:#8B7C6B;font-size:9px">paper #FFFFFF / accent #AA4530</small>
+      <div class="cmp-line"></div>
+      <p>纯白底 + 中性灰。选中态是「1px 陶土红描边 + 红字」，卡片只有一条细线，适合作品集与展厅。</p>
+    </div>
+  </div>
+  <div class="diff">
+    <div><b>底色色温</b>A 暖纸 #F7F1E7（H37 S50）<br>B 纯白，无底色</div>
+    <div><b>中性文字</b>A 暖褐 #6E5A47<br>B 中性灰 #6B6763（色度 4%）</div>
+    <div><b>强调色</b>A 陶土橙 #A5512B（H19）<br>B 陶土红 #AA4530（H10，更红更沉）</div>
+    <div><b>选中表达</b>A 橙雾填充 + 深陶土字<br>B 白底 + 1px 红边 + 红字</div>
+    <div><b>结构</b>A 三层纸色，阴影辅助<br>B 单层白，只靠 1px 线</div>
+    <div><b>彩色面积</b>A 色块可达 15%<br>B 填充 ≤5%，其余给线条</div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>对比度校验</h2><span>WCAG 2.1</span></div>
+  <table>
+    <tr><th>示例</th><th>前景 / 背景</th><th>比值</th><th>结论</th></tr>
+    <tr><td class="sample"><span style="color:var(--ink);font-size:15px">正文 Aa</span></td><td id="r1">#2A2119 / #F7F1E7</td><td class="num" id="n1">14.1 : 1</td><td><span class="aa aaa">AAA</span></td></tr>
+    <tr><td class="sample"><span style="color:var(--muted);font-size:15px">说明 Aa</span></td><td id="r2">#6E5A47 / #F7F1E7</td><td class="num" id="n2">5.8 : 1</td><td><span class="aa">AA</span></td></tr>
+    <tr><td class="sample"><span style="background:var(--accent);color:var(--surface);padding:3px 9px;border-radius:5px;font-size:12px">按钮</span></td><td id="r3">#FFFCF6 / #A5512B</td><td class="num" id="n3">5.4 : 1</td><td><span class="aa">AA</span></td></tr>
+    <tr><td class="sample"><span style="background:var(--accent-tint);color:var(--accent-hover);padding:3px 9px;border-radius:5px;font-size:12px">标签</span></td><td id="r4">#8C4722 / #F5E3D0</td><td class="num" id="n4">5.5 : 1</td><td><span class="aa">AA</span></td></tr>
+    <tr><td class="sample"><span style="color:var(--brass);font-size:15px">黄铜 Aa</span></td><td id="r5">#B4884A / #F7F1E7</td><td class="num" id="n5">2.9 : 1</td><td><span class="aa" style="background:#F7E4DC;color:#A23B2A">仅装饰</span></td></tr>
+  </table>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>暗房预览</h2><span>NEXT · SCHEME C</span></div>
+  <div class="dark">
+    <div class="eyebrow">同一套语义，压进深底</div>
+    <h2>深褐底 + 琥珀强调</h2>
+    <div class="dsw">
+      <div><span style="background:#1B1511"></span><b>#1B1511</b><i>paper</i></div>
+      <div><span style="background:#241C16"></span><b>#241C16</b><i>surface</i></div>
+      <div><span style="background:#3A2E24"></span><b>#3A2E24</b><i>line</i></div>
+      <div><span style="background:#F3E6D3"></span><b>#F3E6D3</b><i>ink · 13.9:1</i></div>
+      <div><span style="background:#D08A4E"></span><b>#D08A4E</b><i>accent · 6.4:1</i></div>
+      <div><span style="background:#E0A468"></span><b>#E0A468</b><i>accent-text</i></div>
+    </div>
+    <p class="dnote">完整的暗色方案见 warm-palette-dark.html：四级提亮分层、琥珀按钮配深褐字、正文用暖白 #F2E7D8。</p>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="sec-head"><h2>用法边界</h2><span>RULES</span></div>
+  <div class="use-grid">
+    <div class="use-card">
+      <h4>建议</h4>
+      <ul id="doList">
+        <li>一屏只有一个实心强调色按钮。</li>
+      </ul>
+    </div>
+    <div class="use-card no">
+      <h4>避免</h4>
+      <ul id="dontList">
+        <li>橙上叠橙。</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <span id="footLeft">POSE ATLAS — WARM PALETTE / AMBER ARCHIVE</span>
+    <span>数值为 sRGB 十六进制，对比度按 WCAG 2.1 相对亮度公式计算 · 地址加 ?scheme=white 查看白墙版</span>
+  </footer>
+</div>
+
+<script>
+  const SCHEMES = {
+    paper: {
+      tag: "方案 A", tagDesc: "纸本 · PAPER",
+      title: "暖色档案 <em>Amber Archive</em>",
+      lede: "把原来的深绿换成深烘焙的褐色，把冷米白推进到被阳光晒过的纸色；<br>强调色只留一种——陶土橙，像暗房红灯落在相纸上。其余全部让位给照片。",
+      m1: "暖纸 + 暖白",
+      shift: "墨绿 → 墨褐；深绿 → <em>陶土橙</em>；冷米白 → 暖纸；薄荷灰 → 陶土薄雾。色相整体顺时针转了约 150°，明度关系保持不变。",
+      sw: {
+        paper:     ["暖纸", "#F7F1E7 · paper", "页面底色。比现在的 #F8F7F3 暖一档、黄一档。"],
+        surface:   ["暖白卡面", "#FFFCF6 · surface", "卡片、弹窗、输入框。带一点点黄，不再是纯白。"],
+        sunken:    ["沉纸", "#F0E6D6 · sunken", "侧栏、状态条、次级区块，与卡面拉开一层。"],
+        "line":    ["暖线", "#E3D7C4 · line", "1px 分隔线，深一档 #D3C2A8 用于卡片描边。"],
+        ink:       ["墨褐", "#2A2119 · ink", "主文本 14.1:1。替代纯黑，与纸面同温度。"],
+        inksoft:   ["次级褐", "#4E4034 · ink-soft", "小标题、图标、表格正文 8.9:1。"],
+        muted:     ["灰褐", "#6E5A47 · muted", "说明文字、元信息 5.8:1，正文级别达标。"],
+        faint:     ["浅褐", "#9A866F · faint", "仅字号 ≥14px 的装饰性微文案与占位符。"],
+        accent:    ["陶土橙", "#A5512B · accent", "主按钮、选中态、链接。白字 5.4:1。"],
+        accentsoft:["深陶土", "#8C4722 · accent-hover", "hover / 按下，以及浅底上的彩色文字。"],
+        tint:      ["陶土薄雾", "#F5E3D0 · accent-tint", "选中 pill、标签底、提示块。承载深陶土字 5.5:1。"],
+        brass:     ["黄铜", "#B4884A · brass", "只用作编号刻线、图章描边、页眉小标记，不承载正文。"]
+      },
+      rows: [["#2A2119 / #F7F1E7","14.1 : 1"],["#6E5A47 / #F7F1E7","5.8 : 1"],["#FFFCF6 / #A5512B","5.4 : 1"],["#8C4722 / #F5E3D0","5.5 : 1"],["#B4884A / #F7F1E7","2.9 : 1"]],
+      do_: ["一屏只有一个陶土橙实心按钮，其余用描边或文字按钮。","照片不动饱和度：暖色交给纸面与线条，别给照片套暖滤镜。","分隔线一律 1px 暖线，靠纸色差异分层，不靠阴影。","徽标、编号用黄铜；正文永远不用黄铜。"],
+      dont: ["橙 + 橙：陶土橙底上再放暖色文字，层级全糊。","把 #B4884A 当作可读文字色（仅 2.9:1）。","纯白 #FFFFFF 卡面，会在暖纸上一块块发蓝。","暖色全部拉高饱和，档案感会变成促销页。"],
+      foot: "POSE ATLAS — WARM PALETTE / AMBER ARCHIVE"
+    },
+    white: {
+      tag: "方案 B", tagDesc: "白墙 · WHITE WALL",
+      title: "白墙陶印 <em>Stone &amp; Clay</em>",
+      lede: "底色交回纯白，中性色改用不带黄的中性灰，暖只留一支更红的陶土与几根铜线；<br>选中不用色块，用 1px 描边——墙和纸的区别，在结构不在明度。",
+      m1: "纯白 + 中性石灰",
+      shift: "暖纸 → <em>纯白</em>；暖褐中性 #6E5A47 → 中性灰 #6B6763；陶土橙 #A5512B → 陶土红 <em>#AA4530</em>；橙雾填充 → 1px 描边。",
+      sw: {
+        paper:     ["纯白", "#FFFFFF · paper", "底色不借用纸的黄色，冷暖全部交给强调色。"],
+        surface:   ["卡面", "#FFFFFF · surface", "与底色同值；只靠 1px 线分界，不加阴影。"],
+        sunken:    ["石灰带", "#F5F4F2 · sunken", "色度只有 13% 的近中性浅带，与 A 的 #F0E6D6 明显不同温。"],
+        "line":    ["界标线", "#E6E3DE · line", "中性细线。B 案的结构几乎全靠它，不是装饰。"],
+        ink:       ["墨", "#191817 · ink", "主文本 17.7:1。近中性黑，不带红。"],
+        inksoft:   ["次级墨", "#454240 · ink-soft", "小标题、图标 10.0:1。"],
+        muted:     ["中性灰", "#6B6763 · muted", "说明文字 5.6:1；完全不带褐，这是与 A 最直接的区别。"],
+        faint:     ["浅灰", "#9E9A94 · faint", "仅装饰性微文案、占位符。"],
+        accent:    ["陶土红", "#AA4530 · accent", "比 A 更红更沉；中性底让它读成红，而不是橙。白字 5.8:1。"],
+        accentsoft:["深陶土红", "#8A3223 · accent-hover", "hover / 按下；浅底彩字 7.2:1。"],
+        tint:      ["陶土薄雾", "#F9EEEA · accent-tint", "只作 ≤5% 面积的提示底；选中态改用描边，不用它。"],
+        brass:     ["铜线", "#A98A5E · brass", "只做 1px 细线与编号，3.2:1，不承载正文。"]
+      },
+      rows: [["#191817 / #FFFFFF","17.7 : 1"],["#6B6763 / #FFFFFF","5.6 : 1"],["#FFFFFF / #AA4530","5.8 : 1"],["#8A3223 / #F9EEEA","7.2 : 1"],["#A98A5E / #FFFFFF","3.2 : 1"]],
+      do_: ["选中态一律「白底 + 1px 陶土红边 + 红字」，不用填充色块。","卡片只留 1px #E6E3DE，不加阴影——一加阴影就变回纸。","分区用 #F5F4F2 石灰带，宽度不超过屏宽 20%。","强调色只出现在 CTA、选中边、编号圆点，其余一律墨色。"],
+      dont: ["沿用 A 的暖褐中性（#6E5A47 一进来，白墙立刻变回纸）。","用橙色填充 pill——B 的识别度就没了。","大面积铺 #F9EEEA，会把白墙染成粉色。","把铜色 #A98A5E 当正文（仅 3.2:1）。"],
+      foot: "POSE ATLAS — WARM PALETTE / STONE & CLAY"
+    }
+  };
+
+  const scheme = new URLSearchParams(location.search).get("scheme") === "white" ? "white" : "paper";
+  document.documentElement.dataset.scheme = scheme;
+  const d = SCHEMES[scheme];
+  document.title = "Pose Atlas · 暖色档案 " + d.tag;
+  document.getElementById("tagName").textContent = d.tag;
+  document.getElementById("tagDesc").textContent = d.tagDesc;
+  document.getElementById("title").innerHTML = d.title;
+  document.getElementById("lede").innerHTML = d.lede;
+  document.getElementById("m1").textContent = d.m1;
+  document.getElementById("shiftNote").innerHTML = d.shift;
+  document.getElementById("footLeft").textContent = d.foot;
+  for (const [k, v] of Object.entries(d.sw)) {
+    const n = document.getElementById("n-" + k);
+    if (n) n.textContent = v[0];
+    const t = document.getElementById("v-" + k);
+    if (t) t.textContent = v[1];
+    const u = document.getElementById("u-" + k);
+    if (u) u.textContent = v[2];
+  }
+  d.rows.forEach((r, i) => {
+    document.getElementById("r" + (i + 1)).textContent = r[0];
+    document.getElementById("n" + (i + 1)).textContent = r[1];
+  });
+  const fill = (id, items) => {
+    document.getElementById(id).innerHTML = items.map((t) => "<li>" + t + "</li>").join("");
+  };
+  fill("doList", d.do_);
+  fill("dontList", d.dont);
+</script>
+</body>
+</html>

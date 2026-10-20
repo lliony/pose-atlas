@@ -1,0 +1,600 @@
+{
+  "categories": [
+    { "id": "category-1", "name": "街道", "code": "01" },
+    { "id": "category-2", "name": "咖啡馆", "code": "02" },
+    { "id": "category-3", "name": "公园", "code": "03" },
+    { "id": "category-4", "name": "海边", "code": "04" },
+    { "id": "category-5", "name": "室内", "code": "05" },
+    { "id": "category-6", "name": "楼梯与走廊", "code": "06" }
+  ],
+  "cards": [
+    {
+      "id": "card-01-001",
+      "categoryId": "category-1",
+      "code": "01-001",
+      "title": "往前走，拍一个背影",
+      "tags": ["行走"],
+      "notes": {
+        "pose": "背对镜头自然向前走，不必回头。",
+        "camera": "拍摄者在身后保持距离，机位接近腰部；选择无人车冲突的人行步道。",
+        "composition": "人物放在偏右位置，利用步道两侧的边线收向远处，让画面有行进方向。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "手臂顺势摆动，不要刻意跨大步。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7511652933285743882",
+        "title": "氛围感背影走拍照",
+        "author": "以七🦋",
+        "basis": "作品说明",
+        "evidence": "说明明确介绍路上的不露脸背影走拍。"
+      },
+      "images": [
+        {
+          "id": "image-01-001",
+          "src": "/images/street.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-01-002",
+      "categoryId": "category-1",
+      "code": "01-002",
+      "title": "轻靠栏杆，低头停一会",
+      "tags": ["倚靠"],
+      "notes": {
+        "pose": "轻靠栏杆，低头，把一只脚向前放。",
+        "camera": "从斜前方拍全身，镜头约在腰部；先找背景简洁的一段栏杆。",
+        "composition": "栏杆斜线引向肩部，向前的脚与支撑腿形成错位，给下方留足空间。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "把重量留在脚下，栏杆只作轻靠。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7654896427995593706",
+        "title": "5个户外生命力姿势",
+        "author": "莹莹出片机（不卡建模版）📷",
+        "basis": "平台智能文稿",
+        "evidence": "文稿包含靠栏低头前伸脚、侧脸持墨镜等动作。原场景为户外，本册归入街道栏杆。"
+      },
+      "images": [
+        {
+          "id": "image-01-002",
+          "src": "/images/street.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-01-003",
+      "categoryId": "category-1",
+      "code": "01-003",
+      "title": "侧脸与一副墨镜",
+      "tags": ["倚靠"],
+      "notes": {
+        "pose": "侧身靠栏，转脸看向一侧，手里拿墨镜。",
+        "camera": "从正前方略偏侧拍中景，调整机位让面部轮廓与背景分离。",
+        "composition": "视线朝向的一侧多留白，用墨镜给手部一个自然落点，简化无关背景。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "墨镜轻拿在身体一侧，不要遮住脸。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7654896427995593706",
+        "title": "5个户外生命力姿势",
+        "author": "莹莹出片机（不卡建模版）📷",
+        "basis": "平台智能文稿",
+        "evidence": "文稿包含靠栏低头前伸脚、侧脸持墨镜等动作。原场景为户外，本册归入街道栏杆。"
+      },
+      "images": [
+        {
+          "id": "image-01-003",
+          "src": "/images/street.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-02-001",
+      "categoryId": "category-2",
+      "code": "02-001",
+      "title": "端起杯子，闻一闻",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "端起咖啡杯轻嗅，视线落向杯子。",
+        "camera": "坐在窗边，从人物斜前方拍半身；以面部亮度为准调整曝光。",
+        "composition": "杯子与脸形成两个相邻兴趣点，桌面只保留少量道具，让动作成为主体。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "杯口不要遮住眼睛，留意热饮温度。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7690449797974717291",
+        "title": "普通咖啡厅的韩系人像拍法",
+        "author": "美好定格",
+        "basis": "作品说明",
+        "evidence": "说明列出端杯轻嗅、翻菜单抬眼、转头看窗外等动作。"
+      },
+      "images": [
+        {
+          "id": "image-02-001",
+          "src": "/images/cafe.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-02-002",
+      "categoryId": "category-2",
+      "code": "02-002",
+      "title": "翻到一页，抬眼看你",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "翻动菜单，再抬眼看向镜头。",
+        "camera": "镜头接近眼睛高度，从桌面斜前方抓拍抬眼的一瞬。",
+        "composition": "菜单放在画面下部，手臂与纸页形成前景，脸部放在上方三分区域。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "把菜单放低，避免纸页挡住下巴。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7690449797974717291",
+        "title": "普通咖啡厅的韩系人像拍法",
+        "author": "美好定格",
+        "basis": "作品说明",
+        "evidence": "说明列出端杯轻嗅、翻菜单抬眼、转头看窗外等动作。"
+      },
+      "images": [
+        {
+          "id": "image-02-002",
+          "src": "/images/cafe.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-02-003",
+      "categoryId": "category-2",
+      "code": "02-003",
+      "title": "转头，看窗外",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "坐在窗边，转头望向窗外。",
+        "camera": "在人物室内一侧拍摄，找到侧脸与窗框错开的位置。",
+        "composition": "窗框围合主体，视线前方留白；保留窗边光线与室内暗部的层次。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "不要让窗框切过眼睛，避免窗外过亮失去细节。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7690449797974717291",
+        "title": "普通咖啡厅的韩系人像拍法",
+        "author": "美好定格",
+        "basis": "作品说明",
+        "evidence": "说明列出端杯轻嗅、翻菜单抬眼、转头看窗外等动作。"
+      },
+      "images": [
+        {
+          "id": "image-02-003",
+          "src": "/images/cafe.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-03-001",
+      "categoryId": "category-3",
+      "code": "03-001",
+      "title": "听到名字，再回头",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "先背向镜头，缓缓转身回头。",
+        "camera": "保持眼平或稍低机位，用连拍记录转头过程。",
+        "composition": "人物偏离中线，选一块均匀树荫或草地作背景，凸显转动的头肩轮廓。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "不要扭到极限，身体可随头部转动。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7668429031137926042",
+        "title": "被夸爆的公园拍照姿势",
+        "author": "作者未能核实",
+        "basis": "搜索索引中的作品说明",
+        "evidence": "说明列出转身回头、道具靠近脸侧、跑动回头等动作。"
+      },
+      "images": [
+        {
+          "id": "image-03-001",
+          "src": "/images/park.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-03-002",
+      "categoryId": "category-3",
+      "code": "03-002",
+      "title": "把小道具，放在脸侧",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "把帽子或饮品放在脸侧，微低头轻笑。",
+        "camera": "在斜前方拍半身，镜头与眼睛接近同高。",
+        "composition": "道具放在脸的一侧形成呼应，另一侧适当留白，减少背景杂枝。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "道具离脸留一点空隙，不要挡眼。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7668429031137926042",
+        "title": "被夸爆的公园拍照姿势",
+        "author": "作者未能核实",
+        "basis": "搜索索引中的作品说明",
+        "evidence": "说明列出转身回头、道具靠近脸侧、跑动回头等动作。"
+      },
+      "images": [
+        {
+          "id": "image-03-002",
+          "src": "/images/park.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-03-003",
+      "categoryId": "category-3",
+      "code": "03-003",
+      "title": "小跑两步，回头笑",
+      "tags": ["行走"],
+      "notes": {
+        "pose": "在跑动中回头，让头发带出动态。",
+        "camera": "选择平整空地，拍摄者固定站位，人物慢速小跑后再回头。",
+        "composition": "给移动方向预留空间，以人物清晰为先，用发丝和衣摆表达动态。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "先确认身后无障碍；不熟悉动作时改为快走。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7668429031137926042",
+        "title": "被夸爆的公园拍照姿势",
+        "author": "作者未能核实",
+        "basis": "搜索索引中的作品说明",
+        "evidence": "说明列出转身回头、道具靠近脸侧、跑动回头等动作。"
+      },
+      "images": [
+        {
+          "id": "image-03-003",
+          "src": "/images/park.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-04-001",
+      "categoryId": "category-4",
+      "code": "04-001",
+      "title": "跟着风，露出侧脸",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "调整朝向，让风吹开头发，露出侧脸。",
+        "camera": "从侧前方拍半身，先观察风向，再微调人物朝向。",
+        "composition": "脸部朝向一侧多留空间，海平线避开颈部，让发丝成为画面的动态线。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "风大时先整理头发，不必一直迎风睁眼。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7632664658318543803",
+        "title": "假期去海边玩的拍照姿势",
+        "author": "作者未能核实",
+        "basis": "平台智能文稿",
+        "evidence": "文稿提及顺着风向露侧脸、望远不露脸、放松倚靠不看镜头。"
+      },
+      "images": [
+        {
+          "id": "image-04-001",
+          "src": "/images/sea.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-04-002",
+      "categoryId": "category-4",
+      "code": "04-002",
+      "title": "看远处，不用露脸",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "看向远处，以背影或不露脸角度拍摄。",
+        "camera": "从身后偏侧拍中远景，保持相机水平，先确定海平线位置。",
+        "composition": "把人物缩小放在一侧，海天留白承托情绪；避免海平线切过头部。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "在干燥平整的沙地站稳后拍摄。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7632664658318543803",
+        "title": "假期去海边玩的拍照姿势",
+        "author": "作者未能核实",
+        "basis": "平台智能文稿",
+        "evidence": "文稿提及顺着风向露侧脸、望远不露脸、放松倚靠不看镜头。"
+      },
+      "images": [
+        {
+          "id": "image-04-002",
+          "src": "/images/sea.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-04-003",
+      "categoryId": "category-4",
+      "code": "04-003",
+      "title": "靠一靠，不看镜头",
+      "tags": ["倚靠"],
+      "notes": {
+        "pose": "放松地倚靠站立，目光离开镜头。",
+        "camera": "选海边步道上稳定的靠背或墙面，从斜前方拍全身。",
+        "composition": "用靠物稳定画面一侧，向海面留白；人与背景保持清晰轮廓。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "远离湿滑礁石和无防护边缘。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7632664658318543803",
+        "title": "假期去海边玩的拍照姿势",
+        "author": "作者未能核实",
+        "basis": "平台智能文稿",
+        "evidence": "文稿提及顺着风向露侧脸、望远不露脸、放松倚靠不看镜头。"
+      },
+      "images": [
+        {
+          "id": "image-04-003",
+          "src": "/images/sea.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-05-001",
+      "categoryId": "category-5",
+      "code": "05-001",
+      "title": "搭着靠背，看一眼手机",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "坐在沙发上，一手搭靠背，另一手拿手机。",
+        "camera": "从斜前方拍摄，镜头接近坐姿胸部高度，借侧窗光照亮面部。",
+        "composition": "靠背的水平线与低垂视线形成对照，手机只作小道具，避免占据画面中心。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "放松肩膀，手机不要挡住面部。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7603074824135677369",
+        "title": "超全面的坐姿拍照教程",
+        "author": "任琪",
+        "basis": "抖音相关视频页所载AI文稿",
+        "evidence": "文稿包含沙发坐姿、手搭靠背持手机、前倾交手和交腿动作。",
+        "evidenceUrl": "https://www.douyin.com/shipin/7644761742836467748"
+      },
+      "images": [
+        {
+          "id": "image-05-001",
+          "src": "/images/indoor.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-05-002",
+      "categoryId": "category-5",
+      "code": "05-002",
+      "title": "坐在边缘，轻轻前倾",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "坐在沙发边缘，双腿略分，上身前倾，双手交叠。",
+        "camera": "从正前方略偏侧拍摄，机位接近胸部，保留双手与膝部。",
+        "composition": "两侧手臂收向交叠的双手，形成稳定三角；背景保持简单。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "保持自然呼吸，不要塌腰或耸肩。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7603074824135677369",
+        "title": "超全面的坐姿拍照教程",
+        "author": "任琪",
+        "basis": "抖音相关视频页所载AI文稿",
+        "evidence": "文稿包含沙发坐姿、手搭靠背持手机、前倾交手和交腿动作。",
+        "evidenceUrl": "https://www.douyin.com/shipin/7644761742836467748"
+      },
+      "images": [
+        {
+          "id": "image-05-002",
+          "src": "/images/indoor.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-05-003",
+      "categoryId": "category-5",
+      "code": "05-003",
+      "title": "交叠双腿，放松上身",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "把一条腿搭在另一条腿上，保持放松坐姿。",
+        "camera": "从斜前方拍摄，退远一些，让腿部与上身比例自然。",
+        "composition": "腿部斜线打破沙发的水平线，脚尖朝向画面内侧，形成舒展感。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "避免长时间维持姿势，双手自然放置即可。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7603074824135677369",
+        "title": "超全面的坐姿拍照教程",
+        "author": "任琪",
+        "basis": "抖音相关视频页所载AI文稿",
+        "evidence": "文稿包含沙发坐姿、手搭靠背持手机、前倾交手和交腿动作。",
+        "evidenceUrl": "https://www.douyin.com/shipin/7644761742836467748"
+      },
+      "images": [
+        {
+          "id": "image-05-003",
+          "src": "/images/indoor.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-06-001",
+      "categoryId": "category-6",
+      "code": "06-001",
+      "title": "台阶上，拿帽撩发",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "在台阶站稳，双脚错开，一手拿帽，一手拨发。",
+        "camera": "从下方轻微仰拍，完整纳入双脚；普通穿搭也可用帽子作道具。",
+        "composition": "阶梯重复线条构成背景，用错开的双脚打破对称，头部避开扶手。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "站稳再摆动作；帽子放低，不遮住腰部轮廓。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7647108902747704627",
+        "title": "毕业季学士服拍照教程",
+        "author": "张八戒（瘦了）",
+        "basis": "平台智能文稿",
+        "evidence": "文稿包含台阶错脚拿帽、侧站撩发抱花回头、坐姿前伸脚。原教程穿学士服，本册提炼通用动作。"
+      },
+      "images": [
+        {
+          "id": "image-06-001",
+          "src": "/images/stairs.png",
+          "panel": 0,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-06-002",
+      "categoryId": "category-6",
+      "code": "06-002",
+      "title": "侧站抱花，回头一下",
+      "tags": ["站姿"],
+      "notes": {
+        "pose": "侧身站立，一手抱花，一手撩发，然后缓缓回头。",
+        "camera": "从人物斜后方拍半身，预留回头时脸部的活动空间。",
+        "composition": "花束放在身体下侧，面部和花束形成对角呼应，让楼梯线条退到背景。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "动作慢一点，花束不要顶住下巴。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7647108902747704627",
+        "title": "毕业季学士服拍照教程",
+        "author": "张八戒（瘦了）",
+        "basis": "平台智能文稿",
+        "evidence": "文稿包含台阶错脚拿帽、侧站撩发抱花回头、坐姿前伸脚。原教程穿学士服，本册提炼通用动作。"
+      },
+      "images": [
+        {
+          "id": "image-06-002",
+          "src": "/images/stairs.png",
+          "panel": 1,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    },
+    {
+      "id": "card-06-003",
+      "categoryId": "category-6",
+      "code": "06-003",
+      "title": "坐低一阶，脚往前放",
+      "tags": ["坐姿"],
+      "notes": {
+        "pose": "坐下，将一脚向前伸，一手轻托脸，另一手放在腿上。",
+        "camera": "从台阶斜前方拍全身，机位略低，保留前伸的脚尖。",
+        "composition": "台阶形成层次，前伸的小腿建立对角线，手肘与膝盖形成小三角。",
+        "light": "选择柔和自然光，先观察面部与背景的亮度差。",
+        "cautions": "选择宽阔平稳、不影响通行的台阶。"
+      },
+      "privateNote": "",
+      "source": {
+        "url": "https://www.douyin.com/video/7647108902747704627",
+        "title": "毕业季学士服拍照教程",
+        "author": "张八戒（瘦了）",
+        "basis": "平台智能文稿",
+        "evidence": "文稿包含台阶错脚拿帽、侧站撩发抱花回头、坐姿前伸脚。原教程穿学士服，本册提炼通用动作。"
+      },
+      "images": [
+        {
+          "id": "image-06-003",
+          "src": "/images/stairs.png",
+          "panel": 2,
+          "ai": true,
+          "notes": {}
+        }
+      ]
+    }
+  ],
+  "albums": [
+    {
+      "id": "album-starter",
+      "name": "把灵感，带到现场",
+      "description": "六种场景，十八个自然瞬间。",
+      "cardIds": [
+        "card-01-001",
+        "card-01-002",
+        "card-01-003",
+        "card-02-001",
+        "card-02-002",
+        "card-02-003",
+        "card-03-001",
+        "card-03-002",
+        "card-03-003",
+        "card-04-001",
+        "card-04-002",
+        "card-04-003",
+        "card-05-001",
+        "card-05-002",
+        "card-05-003",
+        "card-06-001",
+        "card-06-002",
+        "card-06-003"
+      ]
+    }
+  ]
+}

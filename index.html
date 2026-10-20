@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="用多图姿势卡记录动作、光线与构图，制作随身口袋图鉴。"
+    />
+    <link rel="icon" href="/favicon.svg" />
+    <meta name="color-scheme" content="light dark" />
+    <title>姿势图鉴 · POSE ATLAS</title>
+    <script>
+      /* 首帧前定好主题，避免闪白：?theme > 本地保存 > 系统深浅色 */
+      (function () {
+        var allowed = ["paper", "white", "dark"];
+        var theme = "paper";
+        try {
+          var fromQuery = new URLSearchParams(location.search).get("theme");
+          var stored = localStorage.getItem("pose-atlas:theme");
+          if (allowed.indexOf(fromQuery) >= 0) theme = fromQuery;
+          else if (allowed.indexOf(stored) >= 0) theme = stored;
+          else if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+            theme = "dark";
+        } catch (error) {
+          theme = "paper";
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
