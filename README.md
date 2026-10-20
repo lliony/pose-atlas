@@ -1,6 +1,8 @@
 # 姿势图鉴 · React 前端项目
 
-基于 **React + TypeScript + Tailwind CSS + Vite** 的摄影姿势卡管理应用。沿用暖白、深绿和摄影画册风格，内置18张AI参考图片、6个场景。
+[![CI](https://github.com/lliony/pose-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/lliony/pose-atlas/actions/workflows/ci.yml)
+
+基于 **React + TypeScript + Tailwind CSS + Vite** 的摄影姿势卡管理应用。三套可切换配色（纸本 / 白墙 / 暗房）、纸张自适应的双面打印，内置18张AI参考图片、6个场景。
 
 ## 启动
 
@@ -76,23 +78,25 @@ src/
   main.tsx            React入口
   App.tsx             路径分发和错误边界
   Atlas.tsx           工作台及页面交互
-  components/         卡片、编辑器、弹窗、分类/卡册表单和打印
+  components/         卡片、编辑器、弹窗、分类/卡册表单、打印与配色切换
   lib/types.ts        领域类型
   lib/model.ts        教学继承、分享快照、校验、双面排版
+  lib/print.ts        纸张/比例/尺寸 → 每面行列与卡面毫米数
+  lib/theme.ts        三套配色的解析、持久化与预览链接
   lib/seed.json       18张初始参考卡
   services/api.ts     本机/API模式切换，统一请求与上传
   services/storage.ts IndexedDB基础设施
-  styles/app.css     Tailwind入口、主题、@apply与交互样式
-  styles/print.css   毫米尺寸打印和预检样式
+  styles/app.css     Tailwind入口、主题令牌、@apply与交互样式
+  styles/print.css   变量驱动的毫米尺寸打印和预检样式
 public/images/        六张三联AI图片，SVG视窗展示单张
-tests/                领域逻辑测试
-docs/                 迁移计划与接口契约
+tests/                领域逻辑、主题与打印版式测试
+docs/                 接口契约、配色方案与打印说明
 ```
 
 Tailwind CSS 4通过官方PostCSS插件启用，使用 `@theme` 定义颜色、`@apply` 组合组件样式，同时在React中使用工具类。翻面3D变换、复杂响应式规则与实体打印尺寸使用CSS维护。
 
 ## 打印与素材
 
-使用A4横向、100%实际大小，关闭页眉页脚并启用背景图形。先打印方向校验页确认打印机翻转方向。超过80字的栏目先精简，实际排版溢出也会阻止打印。完整说明保留在工作区。
+打印对话框可选纸张（A5 / A4 / A3 / Letter）、横竖方向、卡片尺寸（短边 50 / 70 / 90mm）与卡片比例（口袋卡 70×100、1:1、4:3、3:4、16:9、9:16），每面行列与卡面毫米数自动计算，并记住上次的选择。打印时选 100% 实际大小，关闭页眉页脚并启用背景图形。先打印方向校验页确认翻转方向；超过80字的栏目先精简，实际排版溢出也会阻止打印。详见 [打印说明](docs/design/print-and-grid.md)。
 
 图片为AI生成参考，界面标注AI，保留原始灵感来源链接，并非抖音原视频截图。下载文字资料提供JSON及图片引用；离线完整图文请另存PDF。
