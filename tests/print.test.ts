@@ -6,6 +6,7 @@ import {
   backIndex,
   fillLayout,
   layoutForAspect,
+  layoutForCount,
   sheetCount,
 } from "../src/lib/print.ts";
 import { printSheets } from "../src/lib/model.ts";
@@ -153,4 +154,45 @@ test("每张纸的两面都按同一套行列切分", () => {
   assert.equal(faces.length, 2);
   assert.deepEqual(faces[0], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual(faces[1], [5, 4, 3, 2, 1, 10, 9, 8, 7, 6]);
+});
+
+test("最后一页卡片少时换更紧凑的版面", () => {
+  const two = layoutForCount({
+    paper: "a4",
+    orientation: "landscape",
+    aspect: { w: 3, h: 2 },
+    count: 2,
+  });
+  assert.deepEqual([two.cols, two.rows], [2, 1]);
+  assert.deepEqual([two.cardW, two.cardH], [140, 93.3]);
+
+  const five = layoutForCount({
+    paper: "a4",
+    orientation: "landscape",
+    aspect: { w: 2, h: 3 },
+    count: 5,
+  });
+  assert.deepEqual([five.cols, five.rows], [3, 2]);
+  assert.deepEqual([five.cardW, five.cardH], [66.7, 100]);
+
+  const six = layoutForCount({
+    paper: "a4",
+    orientation: "landscape",
+    aspect: { w: 3, h: 4 },
+    count: 6,
+  });
+  assert.deepEqual([six.cols, six.rows], [3, 2]);
+  assert.deepEqual([six.cardW, six.cardH], [75, 100]);
+});
+
+test("单张时铺满可用区且不越界", () => {
+  const one = layoutForCount({
+    paper: "a4",
+    orientation: "landscape",
+    aspect: { w: 1, h: 1 },
+    count: 1,
+  });
+  assert.deepEqual([one.cols, one.rows], [1, 1]);
+  assert.ok(one.cardW <= 280 + 1e-9);
+  assert.ok(one.cardH <= 200 + 1e-9);
 });

@@ -9,7 +9,7 @@ import {
   PAPERS,
   backIndex,
   layoutForAspect,
-  sheetCount,
+  layoutForCount,
   type Orientation,
   type PaperId,
   type PrintLayout,
@@ -141,15 +141,35 @@ export default function PrintView({
           orientation: settings.orientation,
           aspect: bucket.aspect,
         });
+        // 每张纸单独排版：最后一页卡片少时换更紧凑的版面，避免卡片被拉得很散
+        const sheetsOfGroup: {
+          layout: PrintLayout;
+          front: (Item | null)[];
+          back: (Item | null)[];
+        }[] = [];
+        for (let start = 0; start < bucket.items.length; start += groupLayout.perSheet) {
+          const chunk = bucket.items.slice(start, start + groupLayout.perSheet);
+          const chunkLayout =
+            chunk.length === groupLayout.perSheet
+              ? groupLayout
+              : layoutForCount({
+                  paper: settings.paper,
+                  orientation: settings.orientation,
+                  aspect: bucket.aspect,
+                  count: chunk.length,
+                });
+          const [front, back] = printSheets(
+            chunk,
+            settings.edge,
+            chunkLayout.cols,
+            chunkLayout.rows,
+          );
+          sheetsOfGroup.push({ layout: chunkLayout, front, back });
+        }
         return {
           ...bucket,
           layout: groupLayout,
-          faces: printSheets(
-            bucket.items,
-            settings.edge,
-            groupLayout.cols,
-            groupLayout.rows,
-          ),
+          sheets: sheetsOfGroup,
         };
       })
       .sort((a, b) => b.items.length - a.items.length);
@@ -163,10 +183,7 @@ export default function PrintView({
       aspect: { w: 3, h: 4 },
     });
 
-  const sheets = groups.reduce(
-    (sum, g) => sum + sheetCount(g.items.length, g.layout.perSheet),
-    0,
-  );
+  const sheets = groups.reduce((sum, g) => sum + g.sheets.length, 0);
 
   // @page 尺寸只能靠注入样式，才能做到“选什么纸就印什么纸”
   useEffect(() => {
@@ -380,10 +397,19 @@ export default function PrintView({
               </h3>
               <p>
                 {groups
-                  .map(
-                    (g) =>
-                      `${g.label} · ${g.items.length} 张（${g.layout.cols}×${g.layout.rows}，卡片 ${Number(g.layout.cardW.toFixed(1))}×${Number(g.layout.cardH.toFixed(1))}mm，${sheetCount(g.items.length, g.layout.perSheet)} 张纸）`,
-                  )
+                  .map((g) => {
+                    const first = g.sheets[0].layout;
+                    const same = g.sheets.every(
+                      (s) =>
+                        s.layout.cols === first.cols &&
+                        s.layout.rows === first.rows &&
+                        s.layout.cardW === first.cardW,
+                    );
+                    const size = same
+                      ? `${first.cols}×${first.rows}，卡片 ${Number(first.cardW.toFixed(1))}×${Number(first.cardH.toFixed(1))}mm`
+                      : `${g.sheets.length} 种版面`;
+                    return `${g.label} · ${g.items.length} 张（${size}，${g.sheets.length} 张纸）`;
+                  })
                   .join("；")}
                 <br />
                 相同比例排在一起，正面与反面相邻成对。
@@ -584,27 +610,29 @@ export default function PrintView({
                 </section>
               ))
             : groups.flatMap((group, gi) =>
-                group.faces.map((page, pi) => {
+                group.sheets.flatMap((sheet, si) =>
+                  [sheet.front, sheet.back].map((page, pi) => {
                   const back = pi % 2 === 1;
+                  const pageLayout = sheet.layout;
                   const cs = {
-                    "--paper-w": `${group.layout.paperW}mm`,
-                    "--paper-h": `${group.layout.paperH}mm`,
-                    "--card-w": `${group.layout.cardW}mm`,
-                    "--card-h": `${group.layout.cardH}mm`,
-                    "--cols": group.layout.cols,
-                    "--rows": group.layout.rows,
-                    "--gap": `${group.layout.gutter}mm`,
-                    "--card-fs": `calc(min(${group.layout.cardW}mm, ${group.layout.cardH}mm) * 0.0271)`,
+                    "--paper-w": `${pageLayout.paperW}mm`,
+                    "--paper-h": `${pageLayout.paperH}mm`,
+                    "--card-w": `${pageLayout.cardW}mm`,
+                    "--card-h": `${pageLayout.cardH}mm`,
+                    "--cols": pageLayout.cols,
+                    "--rows": pageLayout.rows,
+                    "--gap": `${pageLayout.gutter}mm`,
+                    "--card-fs": `calc(min(${pageLayout.cardW}mm, ${pageLayout.cardH}mm) * 0.0271)`,
                   } as CSSProperties;
                   return (
                     <section
                       className="print-page"
-                      key={`${gi}-${pi}`}
+                      key={`${gi}-${si}-${pi}`}
                       data-wide={
                         group.aspect.w > group.aspect.h ? "on" : undefined
                       }
                       data-short={
-                        group.layout.cardH <= group.layout.cardW * 1.15
+                        pageLayout.cardH <= pageLayout.cardW * 1.15
                           ? "on"
                           : undefined
                       }
@@ -649,8 +677,8 @@ export default function PrintView({
                               {item.photo.ai ? "AI 生成参考图" : "用户图片"}{" "}
                               <span>
                                 POSE ATLAS /{" "}
-                                {Number(group.layout.cardW.toFixed(1))} ×{" "}
-                                {Number(group.layout.cardH.toFixed(1))}
+                                {Number(pageLayout.cardW.toFixed(1))} ×{" "}
+                                {Number(pageLayout.cardH.toFixed(1))}
                               </span>
                             </div>
                           </article>
@@ -661,7 +689,9 @@ export default function PrintView({
                     </section>
                   );
                 }),
-              )}        </div>,
+                ),
+              )}
+        </div>,
         document.body,
       )}
     </>

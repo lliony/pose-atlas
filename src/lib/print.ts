@@ -66,6 +66,83 @@ export function fillLayout(options: {
 }
 
 /** 与 fillLayout 同一套规则，但比例用图片自身的宽高（w/h），供混合比例分组排版使用。 */
+export function layoutForCount(options: {
+  paper: PaperId;
+  orientation: Orientation;
+  aspect: { w: number; h: number };
+  count: number;
+  ratio?: RatioId;
+}): PrintLayout {
+  const { paper, orientation, aspect, count } = options;
+  const sheet = PAPERS[paper];
+  const paperW = orientation === "landscape" ? sheet.h : sheet.w;
+  const paperH = orientation === "landscape" ? sheet.w : sheet.h;
+  const usableW = paperW - MARGIN_X * 2;
+  const usableH = paperH - MARGIN_Y * 2;
+  const ratioW = aspect.w;
+  const ratioH = aspect.h;
+  const maxShort = TARGET_SHORT_EDGE * MAX_UPSCALE;
+
+  // 只在容量 >= count 的格子里挑：容量越小越紧凑，同容量选卡片最大的
+  let best: {
+    cols: number;
+    rows: number;
+    cardW: number;
+    cardH: number;
+    capacity: number;
+    area: number;
+    widthFill: number;
+  } | null = null;
+  for (let cols = 1; cols <= 6; cols++) {
+    for (let rows = 1; rows <= 6; rows++) {
+      const capacity = cols * rows;
+      if (capacity < count) continue;
+      const cellW = usableW / cols;
+      const cellH = usableH / rows;
+      let w = Math.min(cellW, (cellH * ratioW) / ratioH);
+      let h = (w * ratioH) / ratioW;
+      const short = Math.min(w, h);
+      if (short > maxShort) {
+        const shrink = maxShort / short;
+        w *= shrink;
+        h *= shrink;
+      }
+      if (Math.min(w, h) < MIN_SHORT_EDGE) continue;
+      if (h < MIN_CARD_HEIGHT) continue;
+      const area = w * h;
+      const widthFill = (cols * w) / usableW;
+      const better =
+        !best ||
+        capacity < best.capacity ||
+        (capacity === best.capacity &&
+          (widthFill > best.widthFill + 1e-6 ||
+            (Math.abs(widthFill - best.widthFill) <= 1e-6 &&
+              area > best.area + 1e-9)));
+      if (better) best = { cols, rows, cardW: w, cardH: h, capacity, area, widthFill };
+    }
+  }
+  if (best) {
+    const round = (n: number) => Math.round(n * 10) / 10;
+    return {
+      paper,
+      orientation,
+      ratio: options.ratio ?? "3:4",
+      paperW: round(paperW),
+      paperH: round(paperH),
+      cardW: round(best.cardW),
+      cardH: round(best.cardH),
+      cols: best.cols,
+      rows: best.rows,
+      marginX: MARGIN_X,
+      marginY: MARGIN_Y,
+      gutter: GUTTER,
+      perSheet: best.capacity,
+    };
+  }
+  return layoutForAspect({ paper, orientation, aspect, ratio: options.ratio });
+}
+
+/** 与 fillLayout 同一套规则，但比例用图片自身的宽高（w/h），供混合比例分组排版使用。 */
 export function layoutForAspect(options: {
   paper: PaperId;
   orientation: Orientation;
