@@ -1977,3 +1977,61 @@ body[data-grid="on"] .photo-frame:not(.hero-visual .photo-frame)::after {
   font-size: 11px;
   line-height: 1.6;
 }
+
+/* 多模型档案 */
+.profile-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.profile-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: var(--color-surface);
+}
+.profile-list li.active {
+  border-color: var(--accent);
+  background: var(--color-soft);
+}
+.profile-pick {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  font-size: 12px;
+}
+.profile-pick small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.profile-tags {
+  display: flex;
+  gap: 4px;
+}
+.profile-tags em {
+  font-style: normal;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--color-soft);
+  color: var(--accent);
+  border: 1px solid var(--line-strong);
+}
+.profile-form-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 10px;
+  font-size: 12px;
+  letter-spacing: .4px;
+}

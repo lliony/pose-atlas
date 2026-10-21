@@ -100,3 +100,11 @@ fillLayout({ paper, orientation, ratio })
 
 - **预览按原图比例完整显示**：`.editor-preview` 用图片真实宽高做 aspect-ratio，内部 `object-fit: contain`，2:3 的竖图不会再被裁成方形。
 - **AI 帮我填满**：编辑器把当前图压到 1600px、转 JPEG 后 POST `/api/ai/draft`；服务端用同一套 `AiError` 处理和限流，返回的 JSON 经 `normalizeDraft()` 截断、去重、只保留允许的性别与风格，再合并进表单（**已有内容不覆盖**）。未配置或未启动本地 AI 服务时会直接提示，不会静默失败。
+## 8. 多模型
+
+`createConfigStore` 在旧版单配置之外新增 `pose-ai-profiles:<user>`：`{version:1, profiles:[{id,name,baseUrl,apiKey,model}], recommend, draft}`。
+
+- 系统设置里可增删改多个档案，并分别指定「推荐用」「填充用」；选「系统默认」表示不走个人配置。
+- `store.useFor("recommend" | "draft")` 返回该功能实际使用的配置，推荐浮窗与编辑器各自取自己的那份，服务端协议不变（仍是 `{kind:"personal", config}` 或 `{kind:"default"}`）。
+- 旧数据（`pose-ai-config:<user>`）会显示成一个叫「默认模型」的档案，不写回磁盘；清除后不残留。
+- 未勾选「记住本机」时档案只在本次页面有效，界面会明确提示。

@@ -81,3 +81,44 @@ test("storage failures are readable and preserve a usable session without claimi
   };
   assert.throws(() => createConfigStore("a", disk).load(), /读取.*配置/);
 });
+
+test("多个模型档案可分别指定推荐与填充", () => {
+  const disk = storage();
+  const store = createConfigStore("a", disk);
+  assert.deepEqual(store.profiles(), []);
+  store.saveProfile({ id: "fast", name: "小模型", ...config, model: "small" }, true);
+  store.saveProfile(
+    { id: "vision", name: "视觉模型", ...config, model: "vision" },
+    true,
+  );
+  assert.equal(store.profiles().length, 2);
+  store.setUseFor("recommend", "vision");
+  store.setUseFor("draft", "fast");
+  const reopened = createConfigStore("a", disk);
+  assert.equal(reopened.useFor("recommend")?.model, "vision");
+  assert.equal(reopened.useFor("draft")?.model, "small");
+  assert.deepEqual(
+    reopened.profiles().map((p) => p.name),
+    ["小模型", "视觉模型"],
+  );
+  // 选“系统默认”时不留个人配置
+  reopened.setUseFor("recommend", "");
+  assert.equal(reopened.useFor("recommend"), null);
+  reopened.removeProfile("fast");
+  assert.equal(reopened.useFor("draft"), null);
+  assert.equal(reopened.profiles().length, 1);
+});
+
+test("旧版单配置会迁移成一个默认档案", () => {
+  const disk = storage();
+  disk.map.set("pose-ai-config:a", JSON.stringify(config));
+  const store = createConfigStore("a", disk);
+  const list = store.profiles();
+  assert.equal(list.length, 1);
+  assert.equal(list[0].id, "default");
+  assert.deepEqual(store.useFor("recommend"), { id: "default", name: "默认模型", ...config });
+  // 迁移结果不写回磁盘，清空后不留残留
+  store.clear();
+  assert.equal(disk.map.size, 0);
+  assert.deepEqual(createConfigStore("a", disk).profiles(), []);
+});

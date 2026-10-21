@@ -148,7 +148,7 @@ export default function Editor({
     setAiBusy(true);
     setAiError("");
     try {
-      const config = aiStore?.load() ?? null;
+      const config = aiStore?.useFor("draft") ?? null;
       const selection = config
         ? ({ kind: "personal", config } as const)
         : ({ kind: "default" } as const);

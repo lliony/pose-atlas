@@ -52,7 +52,7 @@ export default function AiRecommendation({
   const { run, cancel, result, loading, error } = useAiRecommendation();
   useEffect(() => {
     try {
-      setConfig(store.load());
+      setConfig(store.useFor('recommend'));
       setConfigError("");
     } catch (e) {
       setConfigError(e instanceof Error ? e.message : "无法读取配置");

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import type { AiConfig } from "../lib/ai-types";
 import { createConfigStore } from "../services/ai-config";
 import { getAiAvailability } from "../services/ai";
 import Dialog from "./Dialog";
@@ -19,15 +18,11 @@ export default function SystemSettings({
   onChanged: () => void;
   onClose: () => void;
 }) {
-  const [config, setConfig] = useState<AiConfig | null>(null);
-  const [remembered, setRemembered] = useState(false);
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState("");
   const [availability, setAvailability] = useState("正在检查系统默认 AI…");
   useEffect(() => {
     try {
-      setConfig(store.load());
-      setRemembered(store.isRemembered());
       setReady(true);
     } catch {
       setMessage("无法读取配置，请检查浏览器存储权限后重新打开设置。");
@@ -71,37 +66,11 @@ export default function SystemSettings({
           </p>
           {ready && (
             <AiSettings
-              config={config}
-              remembered={remembered}
-              onSave={(next, remember) => {
-                try {
-                  store.save(next, remember);
-                  setConfig(next);
-                  setRemembered(store.isRemembered());
-                  setMessage("AI 设置已保存");
-                } catch (error) {
-                  setMessage(
-                    error instanceof Error ? error.message : "保存失败",
-                  );
-                } finally {
-                  onChanged();
-                }
-              }}
-              onClear={() => {
-                try {
-                  store.clear();
-                  setConfig(null);
-                  setRemembered(false);
-                  setMessage("个人配置已清除");
-                } catch (error) {
-                  setMessage(
-                    error instanceof Error ? error.message : "清除失败",
-                  );
-                } finally {
-                  onChanged();
-                }
-              }}
-            />
+              store={store}
+              onChanged={() => {
+                setMessage("AI 设置已更新");
+                onChanged();
+              }}            />
           )}
         </section>
         {message && <p role="status">{message}</p>}
