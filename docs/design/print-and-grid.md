@@ -89,3 +89,10 @@ fillLayout({ paper, orientation, ratio })
   - PDF：**6 页 / 5.5MB**（加缩略图前同内容 13 页 / 27.1MB）；
   - 人物性别筛选「男性」→ 3 张；背面笔记 `scrollHeight 322 / clientHeight 186`，可滚动。
 - 截图：`output/photo-first/`（页面）与 `output/print-layout/`（`print-media-final`、`final.pdf`）。
+
+## 6. 图片比例：识别、提示与裁切
+
+- **上传即识别**：`measureFile()` 用 `createImageBitmap` 读出 `width/height` 存进 `Photo`，卡片直接按这个比例显示；旧数据没有尺寸时由图鉴页探测后补齐（不写库）。
+- **五个标准档**：`1:1 / 3:4 / 4:3 / 9:16 / 16:9`（容差 5%）。不属于任何一档的图在编辑器里显式提示，卡片右下角标「非标准比例」，比例筛选里不会出现。
+- **裁切**：编辑器给非标准图提供「居中裁切并替换」，选目标比例后按中心裁切、重新上传为新的 JPEG，并写回 `width/height`。裁切是破坏性的（替换当前图），原图不保留。
+- **分组打印**：每张图按自己的比例归组，同组同版面，正面紧跟反面。

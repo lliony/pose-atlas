@@ -1,9 +1,17 @@
-import { uploadImage } from "../services/api";
+import { resolveImageUrl, uploadImage } from "../services/api";
 
 import { useEffect, useRef, useState } from "react";
 import Dialog from "./Dialog";
 import Photo from "./Photo";
 import { GENDERS, STYLES } from '../lib/card-appearance';
+import {
+  RATIO_KEYS,
+  cropToRatio,
+  measureFile,
+  ratioKey,
+  sizeOfPhoto,
+  type RatioKey,
+} from '../lib/image-ratio';
 import {
   labels,
   uid,
@@ -52,11 +60,43 @@ export default function Editor({
     [mode, setMode] = useState<"default" | "image">("default"),
     [busy, setBusy] = useState(false),
     [uploading, setUploading] = useState(""),
+    [cropTarget, setCropTarget] = useState<RatioKey>("3:4"),
+    [cropping, setCropping] = useState(false),
     [error, setError] = useState("");
   const dirty = useRef(false),
     drag = useRef(0),
     uploadRef = useRef<HTMLInputElement>(null);
   const photo = value.images[index];
+  const photoSize = photo ? sizeOfPhoto(photo, new Map()) : null;
+  const photoRatio = photoSize ? ratioKey(photoSize.w, photoSize.h) : null;
+  const cropCurrent = async () => {
+    if (!photo || cropping) return;
+    setCropping(true);
+    setError("");
+    try {
+      const url = await resolveImageUrl(photo.src);
+      const cropped = await cropToRatio(url, cropTarget);
+      if (!cropped) throw Error("裁切失败，请换一张图重试");
+      const data = await uploadImage(cropped.file);
+      update({
+        images: value.images.map((item, i) =>
+          i === index
+            ? {
+                ...item,
+                src: data.src,
+                panel: null,
+                width: cropped.size.w,
+                height: cropped.size.h,
+              }
+            : item,
+        ),
+      });
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setCropping(false);
+    }
+  };
   useEffect(() => {
     try {
       localStorage.setItem(draftKey, JSON.stringify(value));
@@ -117,8 +157,16 @@ export default function Editor({
         if (file.size > 20 * 1024 * 1024) throw Error("图片大于20MB");
         if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
           throw Error("仅支持JPEG、PNG和WebP");
+        const size = await measureFile(file);
         const data = await uploadImage(file);
-        additions.push({ id: uid(), src: data.src, ai: false, notes: {} });
+        additions.push({
+          id: uid(),
+          src: data.src,
+          ai: false,
+          notes: {},
+          width: size?.w,
+          height: size?.h,
+        });
       } catch (e: any) {
         setError(file.name + "：" + e.message + "。可重新选择该文件重试。");
       }
@@ -226,6 +274,41 @@ export default function Editor({
                 >
                   移除
                 </button>
+              </div>
+            )}
+            {photo && (
+              <div className="ratio-check">
+                <span>
+                  当前图{" "}
+                  {photoSize
+                    ? `${photoSize.w}×${photoSize.h} · ${photoRatio ?? "非标准比例"}`
+                    : "尺寸未知（重新上传后可识别）"}
+                </span>
+                {!photoRatio && photoSize && (
+                  <>
+                    <span className="ratio-warn">
+                      比例不在 1:1 / 3:4 / 4:3 / 9:16 / 16:9 内，筛选里不会出现，打印会单独成组。
+                    </span>
+                    <select
+                      aria-label="裁切比例"
+                      value={cropTarget}
+                      onChange={(e) => setCropTarget(e.target.value as RatioKey)}
+                    >
+                      {RATIO_KEYS.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => void cropCurrent()}
+                      disabled={cropping}
+                    >
+                      {cropping ? "正在裁切…" : "居中裁切并替换"}
+                    </button>
+                  </>
+                )}
               </div>
             )}
             <label className="upload-button">

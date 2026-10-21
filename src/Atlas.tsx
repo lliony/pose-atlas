@@ -958,6 +958,23 @@ export default function Atlas({ shareId }: { shareId?: string }) {
             <div className="dialog-footer">
               <span className="helper">可以继续补拍、加图和改文案。</span>
               <button
+                className="danger-link"
+                onClick={() => {
+                  const target = detail;
+                  setDetail(undefined);
+                  void act(() =>
+                    save({
+                      ...state,
+                      cards: state.cards.map((x) =>
+                        x.id === target.id ? { ...x, deleted: true } : x,
+                      ),
+                    }),
+                  );
+                }}
+              >
+                移入回收站
+              </button>
+              <button
                 onClick={() => {
                   const target = detail;
                   setDetail(undefined);

@@ -11,6 +11,9 @@ export type Photo = {
   panel?: number | null;
   ai: boolean;
   notes: Partial<Notes>;
+  /** 原图像素尺寸，上传时自动识别，用来判断比例与裁切 */
+  width?: number;
+  height?: number;
 };
 export type Category = { id: string; name: string; code: string };
 export type Card = {

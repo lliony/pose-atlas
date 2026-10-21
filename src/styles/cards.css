@@ -44,3 +44,52 @@
 [data-card-ratio="4:3"] .card-grid, [data-card-ratio="16:9"] .card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 @media(min-width:1700px){[data-card-ratio="4:3"] .card-grid,[data-card-ratio="16:9"] .card-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:760px){[data-card-ratio="4:3"] .card-grid,[data-card-ratio="16:9"] .card-grid{grid-template-columns: minmax(0,1fr);}.card-display-controls{gap:10px}.card-display-controls label{flex:1 1 135px}.card-display-controls select{width:100%;min-width:0}}
+
+/* 编辑器的图片比例提示与裁切 */
+.ratio-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.ratio-check .ratio-warn {
+  color: var(--danger);
+  flex: 1 1 220px;
+}
+.ratio-check select {
+  width: auto;
+  min-width: 90px;
+  min-height: 32px;
+  padding: 4px 8px;
+}
+.ratio-check button {
+  min-height: 32px;
+  padding: 4px 10px;
+}
+.ratio-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #000000a6;
+  color: #ffd9a8;
+  font-size: 9px;
+  letter-spacing: .3px;
+}
+/* 详情页的危险操作：视觉上与主操作分开 */
+.danger-link {
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--danger);
+  padding: 8px 12px;
+  font-size: 11px;
+}
+.danger-link:hover {
+  background: var(--danger-bg);
+  color: var(--danger-fg);
+}

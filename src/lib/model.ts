@@ -39,6 +39,8 @@ export function snapshot(state: State, album: Album): Publication {
           src: i.src,
           panel: i.panel,
           ai: !!i.ai,
+          width: i.width,
+          height: i.height,
           notes: Object.fromEntries(fields.map((k) => [k, i.notes?.[k] || ""])),
         })),
       })),
@@ -133,6 +135,10 @@ export function validateState(s: State) {
         !(p.src === '/images/pose-reference-styles.png' ? [0,1,2,3,4,5] : [0,1,2]).includes(p.panel)
       )
         throw Error("图片分栏无效");
+      for (const dim of [p.width, p.height]) {
+        if (dim !== undefined && (!Number.isInteger(dim) || dim <= 0 || dim > 30000))
+          throw Error("图片尺寸无效");
+      }
       notes(p.notes || {});
     }
     if (

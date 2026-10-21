@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from "react";
 import { resolveNotes } from "../lib/model";
 import { labels, type Card } from "../lib/types";
-import { aspectOf, type PhotoSize } from "../lib/image-ratio";
+import { aspectOf, ratioKey, sizeOfPhoto, type PhotoSize } from "../lib/image-ratio";
 import Photo from "./Photo";
 export default function PoseCard({
   card,
@@ -29,7 +29,9 @@ export default function PoseCard({
   const [index, setIndex] = useState(0),
     [flipped, setFlipped] = useState(false);
   const photo = card.images[Math.min(index, card.images.length - 1)],
-    notes = resolveNotes(card, photo);
+    notes = resolveNotes(card, photo),
+    size = sizeOfPhoto(photo, sizes ?? new Map()),
+    ratioLabel = size ? ratioKey(size.w, size.h) : null;
   return (
     <article
       className={"pose-card " + (selected ? "selected" : "")}
@@ -51,6 +53,9 @@ export default function PoseCard({
             </button>
           </div>
           <Photo image={photo} title={card.title} shareId={shareId} />
+          {size && !ratioLabel && (
+            <span className="ratio-badge">非标准比例</span>
+          )}
           <div className="card-caption">
             <div className="card-title">
               <h3>{card.title}</h3>
