@@ -380,7 +380,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         </div>
       </aside>
       <main>
-        {isLocalMode && (
+        {isLocalMode && !import.meta.env.VITE_HIDE_DEMO && (
           <div className="border-b border-line bg-soft px-5 py-2 text-xs text-ink md:px-12">
             本机演示模式 · 数据保存在当前浏览器，不会自动同步云端。
             <span className="ml-2 text-muted">公开分享需接入 API。</span>
@@ -395,7 +395,9 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               <span className="account">
                 <b />{" "}
                 {local
-                  ? "本机演示 · IndexedDB"
+                  ? import.meta.env.VITE_HIDE_DEMO
+                    ? "本机空间"
+                    : "本机演示 · IndexedDB"
                   : shareId
                     ? "已登录"
                     : "个人云端空间"}
