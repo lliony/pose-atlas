@@ -8,7 +8,7 @@
       → `src/lib/card-appearance.ts`、`reference-cards.ts`、`model.ts`；`tests/card-appearance.test.ts` 4 项。
 - [x] 界面：比例/边框/性别/风格控制，编辑元数据，卡片照片铺满与背面滚动，保留原有操作。
       → `Atlas.tsx` 的 `.card-display-controls`、`styles/cards.css`、`Editor.tsx` 的性别下拉与风格多选。
-- [x] 打印：沿用页面样式与尺寸，移除独立尺寸比例选项；纸张布局测试。
+- [x] 打印：比例跟随页面，按纸张平分平铺；正面与反面相邻成对；移除独立尺寸比例选项；纸张布局测试。
       → `screenPrintLayout()`（CSS px × 25.4/96，只缩不放）；`tests/print.test.ts` 3 项；旧 `printLayout`/`SIZES` 已删除。
 - [x] 验证：完整测试、构建、桌面手机实际浏览器，筛选/编辑/多图/翻面/打印预检；最终代码审查。
       → `npm test` 88/88、`npm run typecheck`、`npm run build` 通过；本机 Chrome 实测记录见 `docs/verification.md` 与 `docs/design/print-and-grid.md`。

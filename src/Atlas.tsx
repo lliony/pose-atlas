@@ -55,7 +55,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
   });
   const [gender,setGender] = useState('全部');
   const [styleFilter,setStyleFilter] = useState('全部');
-  const [screenCardWidth,setScreenCardWidth] = useState(320);
   useEffect(()=>{try{localStorage.setItem('pose-atlas:appearance',JSON.stringify(appearance));}catch{}},[appearance]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [configVersion, setConfigVersion] = useState(0);
@@ -174,8 +173,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
     }
     try {
       if (shareId) await api("shares/" + shareId + "/export");
-      const measured = document.querySelector('.card-grid .flip-shell')?.getBoundingClientRect().width;
-      if(measured && measured > 0) setScreenCardWidth(measured);
       setPrintCards(cards);
     } catch (e: any) {
       setError(e.message);
@@ -834,7 +831,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
       {printCards && (
         <PrintView
           appearance={appearance}
-          screenCardWidth={screenCardWidth}
           cards={printCards}
           shareId={shareId}
           onClose={() => setPrintCards(undefined)}

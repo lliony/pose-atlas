@@ -4,8 +4,8 @@ import {
   PAPERS,
   RATIOS,
   backIndex,
+  fillLayout,
   sheetCount,
-  screenPrintLayout,
 } from "../src/lib/print.ts";
 import { printSheets } from "../src/lib/model.ts";
 
@@ -13,17 +13,55 @@ test("只保留四个已批准的比例，且都是页面级选择", () => {
   assert.deepEqual(Object.keys(RATIOS).sort(), ["16:9", "3:4", "4:3", "9:16"]);
 });
 
-test("纸张表覆盖四种纸张，横向时宽高互换", () => {
+test("A4 横向 3:4 铺成 4×2，单卡 70×93.3mm", () => {
+  const layout = fillLayout({
+    paper: "a4",
+    orientation: "landscape",
+    ratio: "3:4",
+  });
+  assert.deepEqual(
+    [layout.cols, layout.rows, layout.perSheet],
+    [4, 2, 8],
+  );
+  assert.deepEqual([layout.cardW, layout.cardH], [70, 93.3]);
+});
+
+test("A4 横向 16:9 铺成 2×2，卡片放大到填满纸宽", () => {
+  const layout = fillLayout({
+    paper: "a4",
+    orientation: "landscape",
+    ratio: "16:9",
+  });
+  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [2, 2, 4]);
+  assert.deepEqual([layout.cardW, layout.cardH], [140, 78.8]);
+});
+
+test("A5 竖放 9:16 只有一张，放大到纸宽", () => {
+  const layout = fillLayout({
+    paper: "a5",
+    orientation: "portrait",
+    ratio: "9:16",
+  });
+  assert.equal(layout.perSheet, 1);
+  assert.equal(layout.cardW, 94.5);
+  assert.equal(layout.cardH, 168);
+});
+
+test("任何纸张/方向/比例下，卡片都不越界、不小于 60mm 且保持比例", () => {
   for (const paper of Object.keys(PAPERS) as (keyof typeof PAPERS)[]) {
-    const landscape = screenPrintLayout({
-      paper,
-      orientation: "landscape",
-      ratio: "3:4",
-      screenCardWidth: 200,
-    });
-    assert.equal(landscape.paperW, PAPERS[paper].h);
-    assert.equal(landscape.paperH, PAPERS[paper].w);
-    assert.ok(landscape.perSheet >= 1);
+    for (const orientation of ["landscape", "portrait"] as const) {
+      for (const ratio of Object.keys(RATIOS) as (keyof typeof RATIOS)[]) {
+        const layout = fillLayout({ paper, orientation, ratio });
+        const usableW = layout.paperW - layout.marginX * 2;
+        const usableH = layout.paperH - layout.marginY * 2;
+        const [rw, rh] = ratio.split(":").map(Number);
+        assert.ok(layout.cardW <= usableW + 0.05, `${paper}/${orientation}/${ratio} 超宽`);
+        assert.ok(layout.cardH <= usableH + 0.05, `${paper}/${orientation}/${ratio} 超高`);
+        assert.ok(Math.min(layout.cardW, layout.cardH) >= 60, `${paper}/${orientation}/${ratio} 过小`);
+        assert.ok(Math.abs(layout.cardW / layout.cardH - rw / rh) < 0.01, `${paper}/${orientation}/${ratio} 比例失真`);
+        assert.equal(layout.perSheet, layout.cols * layout.rows);
+      }
+    }
   }
 });
 
@@ -59,6 +97,14 @@ test("printSheets 按传入的行列切面", () => {
   assert.equal(printSheets([1, 2, 3, 4, 5, 6, 7], "short", 3, 2).length, 4);
 });
 
+test("正面与反面相邻成对输出", () => {
+  const faces = printSheets(Array.from({ length: 9 }, (_, i) => i + 1), "short", 3, 3);
+  assert.equal(faces.length, 2);
+  // 3×3 一面 9 张，正好一张纸：第 1 面正面、第 2 面背面
+  assert.deepEqual(faces[0], [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  assert.deepEqual(faces[1], [3, 2, 1, 6, 5, 4, 9, 8, 7]);
+});
+
 test("每张纸的两面都按同一套行列切分", () => {
   const faces = printSheets(
     Array.from({ length: 10 }, (_, i) => i + 1),
@@ -69,53 +115,4 @@ test("每张纸的两面都按同一套行列切分", () => {
   assert.equal(faces.length, 2);
   assert.deepEqual(faces[0], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual(faces[1], [5, 4, 3, 2, 1, 10, 9, 8, 7, 6]);
-});
-
-test("screen print uses actual CSS width and preserves each approved ratio", () => {
-  for (const ratio of ["3:4", "4:3", "9:16", "16:9"] as const) {
-    const layout = screenPrintLayout({
-      paper: "a4",
-      orientation: "landscape",
-      ratio,
-      screenCardWidth: 300,
-    });
-    const [w, h] = ratio.split(":").map(Number);
-    assert.ok(Math.abs(layout.cardW - 79.375) < 1e-9);
-    assert.ok(Math.abs(layout.cardW / layout.cardH - w / h) < 1e-9);
-    assert.equal(layout.scale, 1);
-  }
-});
-
-test("screen print uniformly shrinks oversized cards, never expands", () => {
-  const layout = screenPrintLayout({
-    paper: "a5",
-    orientation: "portrait",
-    ratio: "9:16",
-    screenCardWidth: 1200,
-  });
-  assert.equal(layout.cardH, 200);
-  assert.equal(layout.cardW, 112.5);
-  assert.equal(layout.perSheet, 1);
-  assert.ok(layout.scale < 1);
-  const small = screenPrintLayout({
-    paper: "a3",
-    orientation: "landscape",
-    ratio: "4:3",
-    screenCardWidth: 120,
-  });
-  assert.equal(small.scale, 1);
-  assert.equal(small.cardW, 31.75);
-});
-
-test("screen print rejects missing measurement rather than inventing dimensions", () => {
-  for (const screenCardWidth of [0, -1, NaN, Infinity]) {
-    assert.throws(() =>
-      screenPrintLayout({
-        paper: "a4",
-        orientation: "portrait",
-        ratio: "3:4",
-        screenCardWidth,
-      }),
-    );
-  }
 });

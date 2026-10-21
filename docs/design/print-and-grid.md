@@ -2,22 +2,31 @@
 
 三件事的落地说明：**打印尺寸跟随页面**、**卡片可以随时补照片改文案**、**屏幕上的照片可以叠相机式 3×3 网格**。
 
-> 2026-10-21 更新：打印不再单独选卡片尺寸与比例。比例在页面工具栏选一次（3:4 / 4:3 / 9:16 / 16:9），打印直接沿用当前页面卡片的比例与宽度。
+> 2026-10-21 更新：打印不再单独选卡片尺寸与比例。比例在页面工具栏选一次（3:4 / 4:3 / 9:16 / 16:9），打印按纸张平分平铺；正面与反面相邻成对，PDF 页序即「正、背」。
 
 ## 1. 打印版式
 
 ### 模型（`src/lib/print.ts`，纯函数、有测试）
 
 ```ts
-screenPrintLayout({ paper, orientation, ratio, screenCardWidth })
-// → { paperW, paperH, cardW, cardH, cols, rows, perSheet, scale, … }
+fillLayout({ paper, orientation, ratio })
+// → { paperW, paperH, cardW, cardH, cols, rows, perSheet, … }
 ```
 
 - **纸张**：A5 / A4 / A3 / Letter，横竖各一套。
 - **比例**：`3:4 / 4:3 / 9:16 / 16:9`，来自页面的 `data-card-ratio`，打印对话框里不再出现比例选项。
-- **尺寸**：卡片宽度取页面上卡片的实际 CSS 宽度，按 96dpi 换算成毫米（`px × 25.4 / 96`）；只有超出纸张可用区时才整体等比缩小（`scale < 1`），绝不放大。读不到宽度会直接报错，不猜尺寸。
+- **平铺**：以短边 **70mm** 为基准排出尽可能多的卡，再整体放大（最多 ×1.35）把纸面用满；纸太小装不下时先缩到放得下。剩余空隙由打印样式的 `space-evenly` 均分，四周与卡间一致。
 - **安全边距**：横向 8.5mm、纵向 5mm。
-- 每面行列由可用区除以卡片尺寸得到，同一面里比例一致，不混排。
+
+常见组合：
+
+| 纸张 | 比例 | 版面 | 单卡 | 每面 |
+| --- | --- | --- | --- | --- |
+| A4 横向 | 3:4 | 4×2 | 70×93.3mm | 8 |
+| A4 横向 | 16:9 | 2×2 | 140×78.8mm | 4 |
+| A4 横向 | 9:16 | 4×1 | 70×124.4mm | 4 |
+| A3 横向 | 3:4 | 5×3 | 71.8×95.7mm | 15 |
+| A5 竖放 | 9:16 | 1×1 | 94.5×168mm | 1 |
 
 ### 渲染
 
@@ -31,6 +40,10 @@ screenPrintLayout({ paper, orientation, ratio, screenCardWidth })
 ```
 
 字号以**卡片短边**为锚点，卡内间距、栏高、字号都用 em，所以换纸张、换比例都不会串版。`@page` 的尺寸没法用变量，改成运行时注入一段 `@page { size: …mm …mm }`。
+
+### 打印用缩略图
+
+打印前把 `#print-root` 里每张图按长边 1600px 重绘成 JPEG（画布编码，不动屏幕上的原图），再参与文字预检与打印。示例 24 张卡、6 面的 PDF 从 **27.1MB 降到 5.5MB**，纸上分辨力约 190dpi。
 
 ### 双面翻转
 
@@ -65,10 +78,12 @@ screenPrintLayout({ paper, orientation, ratio, screenCardWidth })
 
 ## 5. 验收（2026-10-21）
 
-- `npm test` 88 项全过；`npm run typecheck`、`npm run build` 通过。
+- `npm test` 89 项全过；`npm run typecheck`、`npm run build` 通过。
 - 本机 Chrome 实测：
   - 页面比例 `3:4` 卡片 369×492px，切到 `16:9` 后 565×318px，全部卡片同步、不混排；
-  - 打印摘要 `1 列 × 2 行 · 卡片 149.5×84.1mm`，并注明「沿用当前页面卡片的比例与宽度」；
-  - 点「打印」后 `window.print()` 被调用一次、无预检报错；
+  - 打印摘要 `4 列 × 2 行 · 卡片 70×93.3mm · 共 3 张纸（6 面）`；
+  - 页序 `正背正背正背`，正面紧跟它的反面；
+  - 点「打印」后 `window.print()` 调用一次、无预检报错；
+  - PDF：**6 页 / 5.5MB**（加缩略图前同内容 13 页 / 27.1MB）；
   - 人物性别筛选「男性」→ 3 张；背面笔记 `scrollHeight 322 / clientHeight 186`，可滚动。
-- 截图：`output/photo-first/`（`grid-3-4`、`grid-16-9`、`card-back`、`print-dialog`）。
+- 截图：`output/photo-first/`（页面）与 `output/print-layout/`（`print-media-final`、`final.pdf`）。

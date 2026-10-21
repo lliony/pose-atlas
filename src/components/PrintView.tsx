@@ -9,7 +9,7 @@ import {
   PAPERS,
   RATIOS,
   backIndex,
-  screenPrintLayout,
+  fillLayout,
   sheetCount,
   type Orientation,
   type PaperId,
@@ -60,7 +60,6 @@ export default function PrintView({
   onClose,
   shareId,
   appearance,
-  screenCardWidth,
 }: {
   cards: Card[];
   onClose: () => void;
@@ -69,7 +68,6 @@ export default function PrintView({
     ratio: "3:4" | "4:3" | "9:16" | "16:9";
     frame: "thin" | "none";
   };
-  screenCardWidth: number;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
       cards.flatMap((card) =>
@@ -102,13 +100,12 @@ export default function PrintView({
 
   const layout = useMemo(
     () =>
-      screenPrintLayout({
+      fillLayout({
         paper: settings.paper,
         orientation: settings.orientation,
         ratio: appearance.ratio,
-        screenCardWidth,
       }),
-    [settings.paper, settings.orientation, appearance.ratio, screenCardWidth],
+    [settings.paper, settings.orientation, appearance.ratio],
   );
 
   // @page 尺寸只能靠注入样式，才能做到“选什么纸就印什么纸”
@@ -171,7 +168,68 @@ export default function PrintView({
             }),
         ),
       );
-      const root = document.getElementById("print-root")!;
+      /*
+       * 打印用缩略图：长边压到 1600px 再编码成 JPEG。
+       * 屏幕上的原图不动，只有 #print-root 里这一份换掉，PDF 体积能降一个数量级。
+       */
+      const MAX_EDGE = 1600;
+      const toThumb = (src: string) =>
+        new Promise<[string, string] | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              const longest = Math.max(img.naturalWidth, img.naturalHeight);
+              if (!longest || longest <= MAX_EDGE) return resolve(null);
+              const scale = MAX_EDGE / longest;
+              const canvas = document.createElement("canvas");
+              canvas.width = Math.round(img.naturalWidth * scale);
+              canvas.height = Math.round(img.naturalHeight * scale);
+              const ctx = canvas.getContext("2d");
+              if (!ctx) return resolve(null);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              resolve([src, canvas.toDataURL("image/jpeg", 0.85)]);
+            } catch {
+              resolve(null);
+            }
+          };
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      const printImages = [
+        ...root.querySelectorAll<HTMLImageElement>(".paper-card img"),
+      ];
+      const printSprites = [
+        ...root.querySelectorAll<SVGImageElement>(".paper-card image"),
+      ];
+      const sources = new Set<string>();
+      printImages.forEach((img) => img.src && sources.add(img.src));
+      printSprites.forEach((node) => {
+        const href = node.getAttribute("href");
+        if (href) sources.add(href);
+      });
+      if (sources.size) {
+        const pairs = (
+          await Promise.all([...sources].map((src) => toThumb(src)))
+        ).filter((pair): pair is [string, string] => pair !== null);
+        const thumbs = new Map(pairs);
+        if (thumbs.size) {
+          printImages.forEach((img) => {
+            const next = thumbs.get(img.src);
+            if (next) {
+              img.removeAttribute("srcset");
+              img.src = next;
+            }
+          });
+          printSprites.forEach((node) => {
+            const next = thumbs.get(node.getAttribute("href") || "");
+            if (next) node.setAttribute("href", next);
+          });
+          await Promise.all(
+            printImages.map((img) => img.decode().catch(() => undefined)),
+          );
+        }
+      }
+
       root.classList.add("measure-print");
       await new Promise((r) => requestAnimationFrame(r));
 
@@ -248,7 +306,7 @@ export default function PrintView({
     "--paper-h": `${layout.paperH}mm`,
     "--card-w": `${layout.cardW}mm`,
     "--card-h": `${layout.cardH}mm`,
-    "--frame-width": `${1.5875 * layout.scale}mm`,
+    "--frame-width": "1.5875mm",
     "--cols": layout.cols,
     "--rows": layout.rows,
     "--gap": `${layout.gutter}mm`,
@@ -275,8 +333,7 @@ export default function PrintView({
                 {Number(layout.cardH.toFixed(1))}mm · 共 {sheets} 张纸（
                 {sheets * 2} 面）
                 <br />
-                沿用当前页面卡片的比例与宽度
-                {layout.scale < 1 ? "（超出纸张时已等比缩小）" : ""}。
+                按纸张平分平铺，比例跟随页面（{appearance.ratio}）。
                 <br />
                 打印时选实际大小 100%，关闭页眉页脚，开启背景图形。
               </p>

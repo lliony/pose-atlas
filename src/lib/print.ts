@@ -22,6 +22,10 @@ export const MARGIN_X = 8.5;
 export const MARGIN_Y = 5;
 export const GUTTER = 0;
 
+/** 平铺时的基准短边（mm）与最大放大倍数。 */
+export const TARGET_SHORT_EDGE = 70;
+export const MAX_UPSCALE = 1.35;
+
 export type PrintLayout = {
   paper: PaperId;
   orientation: Orientation;
@@ -40,51 +44,58 @@ export type PrintLayout = {
 };
 
 /**
- * 打印尺寸跟随页面：卡片宽度取屏幕上的实际 CSS 宽度（按 96dpi 换成毫米），
- * 只有超出纸张可用区时才整体等比缩小，绝不放大。
+ * 按纸张平分平铺：以短边 70mm 为基准排出尽可能多的卡，再整体放大到填满纸面
+ * （最多 ×1.35，避免出现海报尺寸）。剩余空隙由打印样式的 `space-evenly` 均分。
  */
-export function screenPrintLayout(options: {
+export function fillLayout(options: {
   paper: PaperId;
   orientation: Orientation;
   ratio: RatioId;
-  screenCardWidth: number;
-}): PrintLayout & { scale: number } {
-  const { paper, orientation, ratio, screenCardWidth } = options;
-  if (!Number.isFinite(screenCardWidth) || screenCardWidth <= 0)
-    throw new Error("无法读取页面卡片宽度，请返回图鉴后重试");
-  const base = PAPERS[paper];
-  const paperW = orientation === "landscape" ? base.h : base.w;
-  const paperH = orientation === "landscape" ? base.w : base.h;
+}): PrintLayout {
+  const { paper, orientation, ratio } = options;
+  const sheet = PAPERS[paper];
+  const paperW = orientation === "landscape" ? sheet.h : sheet.w;
+  const paperH = orientation === "landscape" ? sheet.w : sheet.h;
   const usableW = paperW - MARGIN_X * 2;
   const usableH = paperH - MARGIN_Y * 2;
-  const initialW = (screenCardWidth * 25.4) / 96;
-  const initialH = (initialW * RATIOS[ratio].h) / RATIOS[ratio].w;
-  const scale = Math.min(1, usableW / initialW, usableH / initialH);
-  const cardW = initialW * scale;
-  const cardH = initialH * scale;
-  const cols = Math.max(
-    1,
-    Math.floor((usableW + GUTTER + 1e-9) / (cardW + GUTTER)),
+  const ratioW = RATIOS[ratio].w;
+  const ratioH = RATIOS[ratio].h;
+  const landscape = ratioW > ratioH;
+
+  // 基准卡：短边 70mm
+  let cardW = landscape ? (TARGET_SHORT_EDGE * ratioW) / ratioH : TARGET_SHORT_EDGE;
+  let cardH = landscape ? TARGET_SHORT_EDGE : (TARGET_SHORT_EDGE * ratioH) / ratioW;
+  // 纸太小装不下基准卡时先缩到放得下
+  const fit = Math.min(1, usableW / cardW, usableH / cardH);
+  cardW *= fit;
+  cardH *= fit;
+
+  const cols = Math.max(1, Math.floor((usableW + 1e-9) / cardW));
+  const rows = Math.max(1, Math.floor((usableH + 1e-9) / cardH));
+  // 把剩余空间平摊到卡片上，让整页铺满
+  const upscale = Math.min(
+    MAX_UPSCALE,
+    usableW / (cols * cardW),
+    usableH / (rows * cardH),
   );
-  const rows = Math.max(
-    1,
-    Math.floor((usableH + GUTTER + 1e-9) / (cardH + GUTTER)),
-  );
+  cardW *= upscale;
+  cardH *= upscale;
+
+  const round = (n: number) => Math.round(n * 10) / 10;
   return {
     paper,
     orientation,
     ratio,
-    paperW,
-    paperH,
-    cardW,
-    cardH,
+    paperW: round(paperW),
+    paperH: round(paperH),
+    cardW: round(cardW),
+    cardH: round(cardH),
     cols,
     rows,
     perSheet: cols * rows,
     marginX: MARGIN_X,
     marginY: MARGIN_Y,
     gutter: GUTTER,
-    scale,
   };
 }
 
