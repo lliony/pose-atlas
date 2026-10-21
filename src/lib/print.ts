@@ -1,7 +1,7 @@
 export type PaperId = "a4" | "a3" | "a5" | "letter";
 export type Orientation = "landscape" | "portrait";
 /** 页面级比例，四选一，不混排。 */
-export type RatioId = "3:4" | "4:3" | "9:16" | "16:9";
+export type RatioId = "2:3" | "3:2" | "3:4" | "4:3" | "9:16" | "16:9";
 
 export const PAPERS: Record<PaperId, { name: string; w: number; h: number }> = {
   a5: { name: "A5", w: 148, h: 210 },
@@ -11,6 +11,8 @@ export const PAPERS: Record<PaperId, { name: string; w: number; h: number }> = {
 };
 
 export const RATIOS: Record<RatioId, { name: string; w: number; h: number }> = {
+  "2:3": { name: "竖版 2:3", w: 2, h: 3 },
+  "3:2": { name: "横版 3:2", w: 3, h: 2 },
   "3:4": { name: "竖版 3:4", w: 3, h: 4 },
   "4:3": { name: "横版 4:3", w: 4, h: 3 },
   "9:16": { name: "竖屏 9:16", w: 9, h: 16 },

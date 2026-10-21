@@ -1,4 +1,12 @@
-export const RATIO_KEYS = ["1:1", "3:4", "4:3", "9:16", "16:9"] as const;
+export const RATIO_KEYS = [
+  "1:1",
+  "2:3",
+  "3:4",
+  "9:16",
+  "3:2",
+  "4:3",
+  "16:9",
+] as const;
 export type RatioKey = (typeof RATIO_KEYS)[number];
 
 export type PhotoSize = { w: number; h: number };

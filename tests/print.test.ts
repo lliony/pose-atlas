@@ -10,8 +10,15 @@ import {
 } from "../src/lib/print.ts";
 import { printSheets } from "../src/lib/model.ts";
 
-test("只保留四个已批准的比例，且都是页面级选择", () => {
-  assert.deepEqual(Object.keys(RATIOS).sort(), ["16:9", "3:4", "4:3", "9:16"]);
+test("列出全部支持的打印比例", () => {
+  assert.deepEqual(Object.keys(RATIOS).sort(), [
+    "16:9",
+    "2:3",
+    "3:2",
+    "3:4",
+    "4:3",
+    "9:16",
+  ]);
 });
 
 test("A4 横向 3:4 铺成 4×2，单卡 70×93.3mm", () => {
@@ -35,6 +42,26 @@ test("16:9 为了放下背面笔记，宁可少排几张", () => {
   });
   assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [1, 2, 2]);
   assert.deepEqual([layout.cardW, layout.cardH], [168, 94.5]);
+});
+
+test("2:3 竖版在 A4 上排 4×2，单卡 66.7×100mm", () => {
+  const layout = fillLayout({
+    paper: "a4",
+    orientation: "landscape",
+    ratio: "2:3",
+  });
+  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [4, 2, 8]);
+  assert.deepEqual([layout.cardW, layout.cardH], [66.7, 100]);
+});
+
+test("3:2 横版在 A4 上排 2×2，单卡 140×93.3mm", () => {
+  const layout = fillLayout({
+    paper: "a4",
+    orientation: "landscape",
+    ratio: "3:2",
+  });
+  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [2, 2, 4]);
+  assert.deepEqual([layout.cardW, layout.cardH], [140, 93.3]);
 });
 
 test("1:1 方卡在 A4 上排 3×2，单卡 93.3mm", () => {
