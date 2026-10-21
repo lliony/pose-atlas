@@ -155,9 +155,12 @@ export default function Editor({
       const image = photo ? await toAiImage(photo.src) : undefined;
       if (!image && !value.title.trim())
         throw Error("先上传一张参考图，或先填一个标题");
+      const categoryName =
+        categories.find((c) => c.id === value.categoryId)?.name ?? "";
       const draft = await requestCardDraft(
         {
           selection,
+          category: categoryName || undefined,
           title: value.title.trim() || undefined,
           image,
         },

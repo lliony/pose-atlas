@@ -99,7 +99,7 @@ fillLayout({ paper, orientation, ratio })
 ## 7. 编辑器里的两处便利
 
 - **预览按原图比例完整显示**：`.editor-preview` 用图片真实宽高做 aspect-ratio，内部 `object-fit: contain`，2:3 的竖图不会再被裁成方形。
-- **AI 帮我填满**：编辑器把当前图压到 1600px、转 JPEG 后 POST `/api/ai/draft`；服务端用同一套 `AiError` 处理和限流，返回的 JSON 经 `normalizeDraft()` 截断、去重、只保留允许的性别与风格，再合并进表单（**已有内容不覆盖**）。未配置或未启动本地 AI 服务时会直接提示，不会静默失败。
+- **AI 帮我填满**：编辑器把当前图压到 1600px、转 JPEG，连同**当前分类名与已写标题**一起 POST `/api/ai/draft`；系统提示词按卡片真实约束写死——标题 ≤28 字、五段笔记各 ≤80 字（打印预检的硬上限）、性别只能 女性/男性/多人、风格只能取那 8 个、标签 ≤4 个，并要求写机位/焦段/构图/光位这类可执行细节。返回的 JSON 经 `normalizeDraft()` 按同样上限截断、去重、过滤非法值，再合并进表单（**已有内容不覆盖**）。\n- 404 的含义：本地 AI 服务没启动，或启动的是改动前的旧进程（旧进程没有 `/api/ai/draft`）。重启 `npm run dev:ai` 即可。
 ## 8. 多模型
 
 `createConfigStore` 在旧版单配置之外新增 `pose-ai-profiles:<user>`：`{version:1, profiles:[{id,name,baseUrl,apiKey,model}], recommend, draft}`。

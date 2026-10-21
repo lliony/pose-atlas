@@ -28,6 +28,8 @@ export type AiRequest = {
 };
 export type AiDraftRequest = {
   selection: AiSelection;
+  /** 当前分类名，用来让文案贴合场景 */
+  category?: string;
   title?: string;
   notes?: Partial<Notes>;
   image?: AiImage;

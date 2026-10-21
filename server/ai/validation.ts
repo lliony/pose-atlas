@@ -153,11 +153,13 @@ export async function validateDraftRequest(
     selection = { kind: "personal", config: validatePersonalConfig(choice.config) };
   else throw new AiError("INVALID_INPUT");
   const title = v.title === undefined ? undefined : string(v.title, 100);
+  const category = v.category === undefined ? undefined : string(v.category, 50);
   const validatedImage =
     v.image === undefined ? undefined : await image(v.image);
   if (!title?.trim() && !validatedImage) throw new AiError("INVALID_INPUT");
   return {
     selection,
+    ...(category?.trim() ? { category: category.trim() } : {}),
     ...(title?.trim() ? { title: title.trim() } : {}),
     ...(validatedImage ? { image: validatedImage } : {}),
   };

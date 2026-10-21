@@ -40,7 +40,9 @@ async function call(
     throw Error("AI 服务不可用，请检查网络连接及本地 AI 服务");
   }
   if (response.status === 404)
-    throw Error("AI 服务不可用（404），请启动支持 AI 的本地服务");
+    throw Error(
+      "本地 AI 服务没有这个接口（404）：先确认已运行 npm run dev:ai；如果在运行，请重启它，旧进程不会加载新接口",
+    );
   if (response.status === 401 || response.status === 403)
     throw Error("AI 服务认证失败，请检查密钥及服务权限");
   let value: unknown;
