@@ -1,11 +1,11 @@
 import http from 'node:http';
 import type { AiConfig } from '../src/lib/ai-types.ts';
 import { AI_LIMITS } from '../src/lib/ai-types.ts';
-import type { recommend, testConnection } from './ai/provider.ts';
+import type { draft, recommend, testConnection } from './ai/provider.ts';
 import { AiError } from './ai/errors.ts';
-import { validatePersonalConfig, validateRequest } from './ai/validation.ts';
+import { validateDraftRequest, validatePersonalConfig, validateRequest } from './ai/validation.ts';
 
-type Options = { defaultConfig?: AiConfig; allowedOrigins: string[]; recommend: typeof recommend; testConnection: typeof testConnection };
+type Options = { defaultConfig?: AiConfig; allowedOrigins: string[]; recommend: typeof recommend; draft?: typeof draft; testConnection: typeof testConnection };
 function send(res: http.ServerResponse, status: number, body: unknown) {
   if (res.destroyed || res.writableEnded) return;
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -42,7 +42,7 @@ export function createAiServer(options: Options): http.Server {
       send(res, 403, { error: '请求来源不允许', code: 'FORBIDDEN' }); return;
     }
     if (req.method === 'GET' && req.url === '/api/ai/config') { send(res, 200, { defaultAvailable: !!defaultConfig }); return; }
-    if (req.url !== '/api/ai/test' && req.url !== '/api/ai/recommend') { send(res, 404, { error: '接口不存在', code: 'NOT_FOUND' }); return; }
+    if (req.url !== '/api/ai/test' && req.url !== '/api/ai/recommend' && req.url !== '/api/ai/draft') { send(res, 404, { error: '接口不存在', code: 'NOT_FOUND' }); return; }
     if (req.method !== 'POST') { send(res, 405, { error: '请求方法不允许', code: 'METHOD_NOT_ALLOWED' }); return; }
     if (!req.headers.origin || !origins.has(req.headers.origin)) { send(res, 403, { error: '请求来源不允许', code: 'FORBIDDEN' }); return; }
     if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] ?? '')) { send(res, 415, { error: '请使用 JSON 请求', code: 'UNSUPPORTED_MEDIA_TYPE' }); return; }
@@ -54,13 +54,18 @@ export function createAiServer(options: Options): http.Server {
     try {
       const body = await readBody(req);
       const input = req.url === '/api/ai/recommend' ? await validateRequest(body) : undefined;
-      const config = input ? (input.selection.kind === 'personal' ? input.selection.config : defaultConfig) : validatePersonalConfig(body);
+      const draftInput = req.url === '/api/ai/draft' ? await validateDraftRequest(body) : undefined;
+      const selection = input?.selection ?? draftInput?.selection;
+      const config = selection ? (selection.kind === 'personal' ? selection.config : defaultConfig) : validatePersonalConfig(body);
       if (!config) throw new AiError('NOT_CONFIGURED');
       if (controller.signal.aborted || res.destroyed) return;
       const now = Date.now(); calls = calls.filter(time => now - time < 60000);
       if (active >= 2 || calls.length >= 30) throw new AiError('RATE_LIMITED');
       calls.push(now); active++; acquired = true;
-      if (input) send(res, 200, await options.recommend(config, input, controller.signal));
+      if (draftInput) {
+        if (!options.draft) throw new AiError('NOT_CONFIGURED');
+        send(res, 200, await options.draft(config, draftInput, controller.signal));
+      } else if (input) send(res, 200, await options.recommend(config, input, controller.signal));
       else { await options.testConnection(config, controller.signal); send(res, 200, { ok: true }); }
     } catch (error) {
       // Reconstruct known errors so a mutated/provider message can never expose secrets.

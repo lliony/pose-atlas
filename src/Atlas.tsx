@@ -841,6 +841,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         <Editor
           card={editor}
           intent={editorIntent}
+          aiStore={aiStore}
           categories={state.categories}
           draftKey={
             "pose-draft-" +

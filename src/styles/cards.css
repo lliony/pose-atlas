@@ -105,3 +105,45 @@
   padding: 6px 8px;
   min-height: 32px;
 }
+/* 新增/编辑：预览按原图比例完整显示，不裁切 */
+.editor-preview {
+  position: relative;
+  width: 100%;
+  background: var(--color-sunken);
+  border: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+.editor-preview .photo-frame {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto !important;
+  background: transparent;
+}
+.editor-preview .photo-frame img,
+.editor-preview .photo-frame svg {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+/* AI 一键填充 */
+.ai-fill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.ai-fill button {
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 11px;
+}
+.ai-fill button:hover {
+  background: var(--color-soft);
+}
+.ai-fill .helper {
+  flex: 1 1 220px;
+  margin: 0;
+}

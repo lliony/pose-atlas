@@ -1,4 +1,10 @@
-import type { AiConfig, AiRequest, AiResult } from "../lib/ai-types.ts";
+import type {
+  AiConfig,
+  AiDraftRequest,
+  AiDraftResult,
+  AiRequest,
+  AiResult,
+} from "../lib/ai-types.ts";
 import { validateResult } from "../lib/ai-model.ts";
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -85,6 +91,23 @@ export async function testAiConfig(
 ): Promise<void> {
   const value = record(await call("test", signal, config));
   if (value?.ok !== true) throw Error("AI 连接测试响应格式不正确");
+}
+
+/** 用一张图（或标题）让模型把卡片内容一次写全。 */
+export async function requestCardDraft(
+  input: AiDraftRequest,
+  signal: AbortSignal,
+): Promise<AiDraftResult> {
+  const value = record(await call("draft", signal, input));
+  const notes = record(value?.notes);
+  if (
+    !value ||
+    typeof value.title !== "string" ||
+    !notes ||
+    typeof notes.pose !== "string"
+  )
+    throw Error("AI 返回的卡片内容格式不正确");
+  return value as unknown as AiDraftResult;
 }
 
 export async function requestRecommendations(

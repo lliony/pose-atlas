@@ -26,6 +26,19 @@ export type AiRequest = {
   candidates: AiCandidate[];
   selection: AiSelection;
 };
+export type AiDraftRequest = {
+  selection: AiSelection;
+  title?: string;
+  notes?: Partial<Notes>;
+  image?: AiImage;
+};
+export type AiDraftResult = {
+  title: string;
+  tags: string[];
+  gender?: string;
+  styles: string[];
+  notes: Notes;
+};
 export type AiResult = {
   sceneSummary: string;
   recommendations: { cardId: string; reason: string; adjustment: string }[];

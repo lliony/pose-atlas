@@ -1,4 +1,6 @@
 import { resolveImageUrl, uploadImage } from "../services/api";
+import { requestCardDraft } from "../services/ai";
+import type { createConfigStore } from "../services/ai-config";
 
 import { useEffect, useRef, useState } from "react";
 import Dialog from "./Dialog";
@@ -45,6 +47,7 @@ export default function Editor({
   onClose,
   draftKey,
   intent,
+  aiStore,
 }: {
   card: Card;
   categories: Category[];
@@ -52,6 +55,7 @@ export default function Editor({
   onClose: () => void;
   draftKey: string;
   intent?: "photos";
+  aiStore?: ReturnType<typeof createConfigStore>;
 }) {
   const [initial] = useState(() => readDraft(draftKey, card)),
     [value, setValue] = useState<Card>(initial.value),
@@ -61,6 +65,8 @@ export default function Editor({
     [busy, setBusy] = useState(false),
     [uploading, setUploading] = useState(""),
     [cropTarget, setCropTarget] = useState<RatioKey>("3:4"),
+    [aiBusy, setAiBusy] = useState(false),
+    [aiError, setAiError] = useState(""),
     [cropping, setCropping] = useState(false),
     [error, setError] = useState("");
   const dirty = useRef(false),
@@ -109,6 +115,75 @@ export default function Editor({
     input?.scrollIntoView({ block: "center", behavior: "smooth" });
     input?.focus({ preventScroll: true });
   }, [intent]);
+  const toAiImage = async (src: string) => {
+    try {
+      const url = await resolveImageUrl(src);
+      const img = await new Promise<HTMLImageElement | null>((resolve) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => resolve(null);
+        el.src = url;
+      });
+      if (!img) return undefined;
+      const scale = Math.min(
+        1,
+        1600 / Math.max(img.naturalWidth, img.naturalHeight),
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return undefined;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const base64 = canvas.toDataURL("image/jpeg", 0.85).split(",")[1];
+      return base64 ? { mime: "image/jpeg" as const, base64 } : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  const aiFill = async () => {
+    if (aiBusy) return;
+    setAiBusy(true);
+    setAiError("");
+    try {
+      const config = aiStore?.load() ?? null;
+      const selection = config
+        ? ({ kind: "personal", config } as const)
+        : ({ kind: "default" } as const);
+      const image = photo ? await toAiImage(photo.src) : undefined;
+      if (!image && !value.title.trim())
+        throw Error("先上传一张参考图，或先填一个标题");
+      const draft = await requestCardDraft(
+        {
+          selection,
+          title: value.title.trim() || undefined,
+          image,
+        },
+        new AbortController().signal,
+      );
+      dirty.current = true;
+      setValue((v) => ({
+        ...v,
+        title: v.title.trim() || draft.title,
+        tags: v.tags.length ? v.tags : draft.tags,
+        gender: v.gender ?? draft.gender,
+        styles: v.styles?.length ? v.styles : draft.styles,
+        notes: {
+          pose: v.notes.pose || draft.notes.pose,
+          camera: v.notes.camera || draft.notes.camera,
+          composition: v.notes.composition || draft.notes.composition,
+          light: v.notes.light || draft.notes.light,
+          cautions: v.notes.cautions || draft.notes.cautions,
+        },
+      }));
+    } catch (e: any) {
+      setAiError(e.message);
+    } finally {
+      setAiBusy(false);
+    }
+  };
   const discardDraft = () => {
     try {
       localStorage.removeItem(draftKey);
@@ -217,7 +292,16 @@ export default function Editor({
               <span>{value.images.length} / 20</span>
             </div>
             {photo ? (
-              <Photo image={photo} title={value.title} />
+              <div
+                className="editor-preview"
+                style={
+                  photoSize
+                    ? { aspectRatio: `${photoSize.w} / ${photoSize.h}` }
+                    : undefined
+                }
+              >
+                <Photo image={photo} title={value.title} />
+              </div>
             ) : (
               <div className="upload-empty">
                 ＋<p>把你的拍摄灵感放进来</p>
@@ -347,6 +431,23 @@ export default function Editor({
             <p role="status">{uploading}</p>
           </section>
           <section className="editor-fields">
+            <div className="ai-fill">
+              <button
+                type="button"
+                onClick={() => void aiFill()}
+                disabled={aiBusy || !!uploading}
+              >
+                {aiBusy ? "✦ AI 正在写…" : "✦ AI 帮我填满"}
+              </button>
+              <span className="helper">
+                用当前图片生成标题、标签与五段教学；已填写的内容不会被覆盖。
+              </span>
+            </div>
+            {aiError && (
+              <p className="form-error" role="alert">
+                {aiError}
+              </p>
+            )}
             <div className="form-row">
               <label>人物性别<select value={value.gender || ''} onChange={e=>update({gender:e.target.value || undefined})}><option value="">未分类</option>{GENDERS.map(g=><option key={g}>{g}</option>)}</select></label>
             </div>

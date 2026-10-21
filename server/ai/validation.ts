@@ -57,7 +57,7 @@ function candidate(value: unknown): AiCandidate {
     }),
   };
 }
-async function image(value: unknown): Promise<AiImage> {
+export async function image(value: unknown): Promise<AiImage> {
   const i = object(value);
   if (i.mime !== "image/jpeg" || typeof i.base64 !== "string")
     throw new AiError("IMAGE_UNSUPPORTED");
@@ -138,5 +138,27 @@ export async function validateRequest(value: unknown): Promise<AiRequest> {
     ...(validatedImage ? { image: validatedImage } : {}),
     candidates,
     selection,
+  };
+}
+
+/** 快速填卡：图片可选，标题/现有文案作为提示；必须给图或给标题。 */
+export async function validateDraftRequest(
+  value: unknown,
+): Promise<import("../../src/lib/ai-types.ts").AiDraftRequest> {
+  const v = object(value);
+  const choice = object(v.selection);
+  let selection: import("../../src/lib/ai-types.ts").AiSelection;
+  if (choice.kind === "default") selection = { kind: "default" };
+  else if (choice.kind === "personal")
+    selection = { kind: "personal", config: validatePersonalConfig(choice.config) };
+  else throw new AiError("INVALID_INPUT");
+  const title = v.title === undefined ? undefined : string(v.title, 100);
+  const validatedImage =
+    v.image === undefined ? undefined : await image(v.image);
+  if (!title?.trim() && !validatedImage) throw new AiError("INVALID_INPUT");
+  return {
+    selection,
+    ...(title?.trim() ? { title: title.trim() } : {}),
+    ...(validatedImage ? { image: validatedImage } : {}),
   };
 }
