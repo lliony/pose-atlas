@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { resolveNotes } from "../lib/model";
 import { labels, type Card } from "../lib/types";
 import { aspectOf, ratioKey, sizeOfPhoto, type PhotoSize } from "../lib/image-ratio";
@@ -13,6 +13,7 @@ export default function PoseCard({
   onRead,
   shareId,
   sizes,
+  actions,
   readonly = false,
 }: {
   card: Card;
@@ -24,6 +25,8 @@ export default function PoseCard({
   onRead: () => void;
   shareId?: string;
   sizes?: Map<string, PhotoSize>;
+  /** 回收站等场景的自定义操作，替代默认的“移入回收站” */
+  actions?: ReactNode;
   readonly?: boolean;
 }) {
   const [index, setIndex] = useState(0),
@@ -43,14 +46,16 @@ export default function PoseCard({
             <span>
               <span className="pose-code">{card.code}</span> <span>{category}</span>
             </span>
-            <button
-              className={"check-btn " + (selected ? "checked" : "")}
-              onClick={onSelect}
-              aria-pressed={selected}
-              aria-label={"选择 " + card.title}
-            >
-              {selected ? "✓" : "+"}
-            </button>
+            {!actions && (
+              <button
+                className={"check-btn " + (selected ? "checked" : "")}
+                onClick={onSelect}
+                aria-pressed={selected}
+                aria-label={"选择 " + card.title}
+              >
+                {selected ? "✓" : "+"}
+              </button>
+            )}
           </div>
           <Photo image={photo} title={card.title} shareId={shareId} />
           {size && !ratioLabel && (
@@ -142,10 +147,14 @@ export default function PoseCard({
           </div>
         </section>
       </div>
-      {!readonly && (
-        <button className="delete-link" onClick={onDelete}>
-          移入回收站
-        </button>
+      {actions ? (
+        <div className="trash-actions">{actions}</div>
+      ) : (
+        !readonly && (
+          <button className="delete-link" onClick={onDelete}>
+            移入回收站
+          </button>
+        )
       )}
     </article>
   );

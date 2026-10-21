@@ -93,3 +93,15 @@
   background: var(--danger-bg);
   color: var(--danger-fg);
 }
+/* 回收站：卡片下方放恢复/永久删除 */
+.trash-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.trash-actions button {
+  flex: 1;
+  font-size: 10px;
+  padding: 6px 8px;
+  min-height: 32px;
+}

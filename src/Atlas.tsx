@@ -699,50 +699,70 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                   })}
                 </div>
               ) : view === "trash" ? (
-                <div className="trash-list">
+                <div className="card-grid">
                   {visible.map((c) => (
-                    <div key={c.id}>
-                      <span>
-                        {c.code} · {c.title}
-                      </span>
-                      <button
-                        onClick={() =>
-                          void act(() =>
-                            save({
-                              ...state,
-                              cards: state.cards.map((x) =>
-                                x.id === c.id ? { ...x, deleted: false } : x,
-                              ),
-                            }),
-                          )
-                        }
-                      >
-                        恢复
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (
-                            confirm(
-                              "永久删除这张卡片？已有公开副本需另行更新或取消。",
-                            )
-                          )
-                            void act(() =>
-                              save({
-                                ...state,
-                                cards: state.cards.filter((x) => x.id !== c.id),
-                                albums: state.albums.map((a) => ({
-                                  ...a,
-                                  cardIds: a.cardIds.filter(
-                                    (id) => id !== c.id,
+                    <PoseCard
+                      key={c.id}
+                      card={c}
+                      category={
+                        state.categories.find((x) => x.id === c.categoryId)
+                          ?.name || ""
+                      }
+                      selected={false}
+                      readonly
+                      shareId={shareId}
+                      sizes={sizes}
+                      onSelect={() => {}}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                      onRead={() => openDetail(c)}
+                      actions={
+                        <>
+                          <button
+                            onClick={() =>
+                              void act(() =>
+                                save({
+                                  ...state,
+                                  cards: state.cards.map((x) =>
+                                    x.id === c.id
+                                      ? { ...x, deleted: false }
+                                      : x,
                                   ),
-                                })),
-                              }),
-                            );
-                        }}
-                      >
-                        永久删除
-                      </button>
-                    </div>
+                                }),
+                              )
+                            }
+                          >
+                            恢复
+                          </button>
+                          <button
+                            className="danger-link"
+                            onClick={() => {
+                              if (
+                                confirm(
+                                  "永久删除这张卡片？已有公开副本需另行更新或取消。",
+                                )
+                              )
+                                void act(() =>
+                                  save({
+                                    ...state,
+                                    cards: state.cards.filter(
+                                      (x) => x.id !== c.id,
+                                    ),
+                                    albums: state.albums.map((a) => ({
+                                      ...a,
+                                      cardIds: a.cardIds.filter(
+                                        (id) => id !== c.id,
+                                      ),
+                                    })),
+                                  }),
+                                );
+                            }}
+                          >
+                            永久删除
+                          </button>
+                        </>
+                      }
+                    />
                   ))}
                 </div>
               ) : (
