@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CARD_RATIOS, GENDERS, STYLES, normalizeAppearance, matchesPerson, type CardAppearance } from './lib/card-appearance';
+import { RATIO_KEYS, cardRatioKeys, aspectOf, type PhotoSize, type RatioKey } from './lib/image-ratio';
 import AiRecommendation from "./components/ai/AiRecommendation";
 import { createConfigStore } from "./services/ai-config";
 import seed from "./lib/seed.json";
@@ -23,6 +24,7 @@ import { CategoryDialog, AlbumDialog } from "./components/LibraryDialogs";
 import {
   api,
   isLocalMode,
+  resolveImageUrl,
   type Workspace,
   type ShareResponse,
   type PublishResponse,
@@ -54,8 +56,42 @@ export default function Atlas({ shareId }: { shareId?: string }) {
     try{return normalizeAppearance(JSON.parse(localStorage.getItem('pose-atlas:appearance') || 'null'));}catch{return normalizeAppearance(null);}
   });
   const [gender,setGender] = useState('全部');
+  const [sizes,setSizes] = useState<Map<string,PhotoSize>>(new Map());
+  const [ratioFilter,setRatioFilter] = useState<'全部'|RatioKey>('全部');
   const [styleFilter,setStyleFilter] = useState('全部');
   useEffect(()=>{try{localStorage.setItem('pose-atlas:appearance',JSON.stringify(appearance));}catch{}},[appearance]);
+  // 量出每张图的原始尺寸：按比例筛选、按比例排版都靠它（不再裁切）
+  useEffect(() => {
+    let alive = true;
+    const srcs = new Set<string>();
+    state.cards.forEach((c) => c.images.forEach((p) => srcs.add(p.src)));
+    void (async () => {
+      const entries = await Promise.all(
+        [...srcs].map(async (src) => {
+          try {
+            const url = await resolveImageUrl(src, shareId);
+            const size = await new Promise<PhotoSize | null>((resolve) => {
+              const img = new Image();
+              img.onload = () =>
+                resolve({ w: img.naturalWidth, h: img.naturalHeight });
+              img.onerror = () => resolve(null);
+              img.src = url;
+            });
+            return size ? ([src, size] as [string, PhotoSize]) : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (alive)
+        setSizes(
+          new Map(entries.filter((e): e is [string, PhotoSize] => e !== null)),
+        );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [state.cards, shareId]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [configVersion, setConfigVersion] = useState(0);
   const [showGrid, setShowGrid] = useState(() => {
@@ -159,6 +195,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         (view === "trash" ? c.deleted : !c.deleted) &&
         (category === "all" || c.categoryId === category) &&
         matchesPerson(c,gender,styleFilter) &&
+        (ratioFilter==='全部' || cardRatioKeys(c.images, sizes).has(ratioFilter)) &&
         (!query ||
           [c.title, c.code, ...c.tags, c.gender || '', ...(c.styles || [])]
             .join(" ")
@@ -529,11 +566,11 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               </div>
               {view !== "albums" && (
                 <div className="card-display-controls" aria-label="卡片显示与人物筛选">
-                  <label>照片比例<select aria-label="照片比例" value={appearance.ratio} onChange={e=>setAppearance({...appearance,ratio:e.target.value as CardAppearance['ratio']})}>{CARD_RATIOS.map(r=><option key={r} value={r}>{r} {r==='3:4'||r==='9:16'?'竖版':'横版'}</option>)}</select></label>
+                  <label>图片比例<select aria-label="图片比例" value={ratioFilter} onChange={e=>setRatioFilter(e.target.value as '全部'|RatioKey)}><option value="全部">全部</option>{RATIO_KEYS.map(r=><option key={r} value={r}>{r}</option>)}</select></label>
                   <label>卡片边框<select value={appearance.frame} onChange={e=>setAppearance({...appearance,frame:e.target.value as CardAppearance['frame']})}><option value="thin">细边框</option><option value="none">无边框</option></select></label>
                   <label>人物性别<select value={gender} onChange={e=>setGender(e.target.value)}>{['全部',...GENDERS,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
                   <label>气质风格<select value={styleFilter} onChange={e=>setStyleFilter(e.target.value)}>{['全部',...STYLES,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
-                  {(gender!=='全部'||styleFilter!=='全部')&&<button onClick={()=>{setGender('全部');setStyleFilter('全部');}}>清除人物筛选</button>}
+                  {(gender!=='全部'||styleFilter!=='全部'||ratioFilter!=='全部')&&<button onClick={()=>{setGender('全部');setStyleFilter('全部');setRatioFilter('全部');}}>清除筛选</button>}
                 </div>
               )}
               {view !== "albums" && (
@@ -721,6 +758,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                       selected={selected.has(c.id)}
                       readonly={!owner}
                       shareId={shareId}
+                      sizes={sizes}
                       onSelect={() =>
                         setSelected((s) => {
                           const n = new Set(s);
@@ -832,6 +870,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         <PrintView
           appearance={appearance}
           cards={printCards}
+          sizes={sizes}
           shareId={shareId}
           onClose={() => setPrintCards(undefined)}
         />

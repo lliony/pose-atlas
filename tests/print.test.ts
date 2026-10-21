@@ -5,6 +5,7 @@ import {
   RATIOS,
   backIndex,
   fillLayout,
+  layoutForAspect,
   sheetCount,
 } from "../src/lib/print.ts";
 import { printSheets } from "../src/lib/model.ts";
@@ -26,14 +27,24 @@ test("A4 横向 3:4 铺成 4×2，单卡 70×93.3mm", () => {
   assert.deepEqual([layout.cardW, layout.cardH], [70, 93.3]);
 });
 
-test("A4 横向 16:9 铺成 2×2，卡片放大到填满纸宽", () => {
+test("16:9 为了放下背面笔记，宁可少排几张", () => {
   const layout = fillLayout({
     paper: "a4",
     orientation: "landscape",
     ratio: "16:9",
   });
-  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [2, 2, 4]);
-  assert.deepEqual([layout.cardW, layout.cardH], [140, 78.8]);
+  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [1, 2, 2]);
+  assert.deepEqual([layout.cardW, layout.cardH], [168, 94.5]);
+});
+
+test("1:1 方卡在 A4 上排 3×2，单卡 93.3mm", () => {
+  const layout = layoutForAspect({
+    paper: "a4",
+    orientation: "landscape",
+    aspect: { w: 1, h: 1 },
+  });
+  assert.deepEqual([layout.cols, layout.rows, layout.perSheet], [3, 2, 6]);
+  assert.deepEqual([layout.cardW, layout.cardH], [93.3, 93.3]);
 });
 
 test("A5 竖放 9:16 只有一张，放大到纸宽", () => {

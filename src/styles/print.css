@@ -177,11 +177,18 @@
 }
 
 /* Wide backs keep all notes in a measured two-column grid. */
-#print-root[data-wide="on"] .paper-back .paper-notes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-content: start;
-  gap: 0 1.2em;
+#print-root .paper-back .paper-notes {
+  display: block;
+  column-count: 2;
+  column-gap: 1.2em;
+}
+#print-root .paper-back .paper-notes p {
+  break-inside: avoid;
+}
+/* 方卡/短卡（1:1 等）背面同样排两栏，否则 70mm 高度放不下五段笔记 */
+
+#print-root .paper-back .paper-notes p {
+  break-inside: avoid;
 }
 .paper-notes p {
   margin: 0;

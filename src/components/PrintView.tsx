@@ -7,13 +7,14 @@ import Photo from "./Photo";
 import { printSheets, resolveNotes } from "../lib/model";
 import {
   PAPERS,
-  RATIOS,
   backIndex,
-  fillLayout,
+  layoutForAspect,
   sheetCount,
   type Orientation,
   type PaperId,
+  type PrintLayout,
 } from "../lib/print";
+import { sizeOfPhoto, type PhotoSize } from "../lib/image-ratio";
 import {
   labels,
   type Card,
@@ -21,6 +22,9 @@ import {
   type Notes,
 } from "../lib/types";
 type Item = { card: Card; photo: Picture; notes: Notes };
+
+const gcd = (a: number, b: number): number =>
+  b === 0 ? a : gcd(b, a % b);
 
 type Settings = {
   paper: PaperId;
@@ -60,6 +64,7 @@ export default function PrintView({
   onClose,
   shareId,
   appearance,
+  sizes,
 }: {
   cards: Card[];
   onClose: () => void;
@@ -68,6 +73,7 @@ export default function PrintView({
     ratio: "3:4" | "4:3" | "9:16" | "16:9";
     frame: "thin" | "none";
   };
+  sizes?: Map<string, PhotoSize>;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
       cards.flatMap((card) =>
@@ -98,14 +104,68 @@ export default function PrintView({
     }
   }, [settings]);
 
-  const layout = useMemo(
-    () =>
-      fillLayout({
-        paper: settings.paper,
-        orientation: settings.orientation,
-        ratio: appearance.ratio,
-      }),
-    [settings.paper, settings.orientation, appearance.ratio],
+  const list = items.filter((i) => chosen.has(i.photo.id)),
+    tooLong = list.some(
+      (i) =>
+        Object.values(i.notes).some((t) => t.length > 80) ||
+        i.card.title.length > 28,
+    );
+
+  // 相同比例的图片排在一起：每种比例单独算版面、单独起一张纸
+  const groups = (() => {
+    const buckets = new Map<
+      string,
+      { label: string; aspect: { w: number; h: number }; items: Item[] }
+    >();
+    for (const item of list) {
+      const size = sizeOfPhoto(item.photo, sizes ?? new Map()) ?? {
+        w: 3,
+        h: 4,
+      };
+      const g = gcd(size.w, size.h) || 1;
+      const aspect = { w: size.w / g, h: size.h / g };
+      const key = `${aspect.w}:${aspect.h}`;
+      const bucket = buckets.get(key);
+      if (bucket) bucket.items.push(item);
+      else
+        buckets.set(key, {
+          label: `${aspect.w}:${aspect.h}`,
+          aspect,
+          items: [item],
+        });
+    }
+    return [...buckets.values()]
+      .map((bucket) => {
+        const groupLayout = layoutForAspect({
+          paper: settings.paper,
+          orientation: settings.orientation,
+          aspect: bucket.aspect,
+        });
+        return {
+          ...bucket,
+          layout: groupLayout,
+          faces: printSheets(
+            bucket.items,
+            settings.edge,
+            groupLayout.cols,
+            groupLayout.rows,
+          ),
+        };
+      })
+      .sort((a, b) => b.items.length - a.items.length);
+  })();
+
+  const layout: PrintLayout =
+    groups[0]?.layout ??
+    layoutForAspect({
+      paper: settings.paper,
+      orientation: settings.orientation,
+      aspect: { w: 3, h: 4 },
+    });
+
+  const sheets = groups.reduce(
+    (sum, g) => sum + sheetCount(g.items.length, g.layout.perSheet),
+    0,
   );
 
   // @page 尺寸只能靠注入样式，才能做到“选什么纸就印什么纸”
@@ -123,15 +183,6 @@ export default function PrintView({
       style?.remove();
     };
   }, [layout.paperW, layout.paperH]);
-
-  const list = items.filter((i) => chosen.has(i.photo.id)),
-    tooLong = list.some(
-      (i) =>
-        Object.values(i.notes).some((t) => t.length > 80) ||
-        i.card.title.length > 28,
-    ),
-    sheets = sheetCount(list.length, layout.perSheet),
-    faces = printSheets(list, settings.edge, layout.cols, layout.rows);
 
   const print = async () => {
     setPrinting(true);
@@ -254,7 +305,7 @@ export default function PrintView({
         if (!notes) return true;
         notes.style.removeProperty("--notes-scale");
         let scale = 1;
-        while (overflows(notes) && scale > 0.84) {
+        while (overflows(notes) && scale > 0.78) {
           scale = Math.round((scale - 0.04) * 100) / 100;
           notes.style.setProperty("--notes-scale", String(scale));
         }
@@ -286,7 +337,7 @@ export default function PrintView({
       if (first) {
         setBlockedPhoto(first.photoId);
         throw Error(
-          `卡片 ${first.label} 的文字放不下这张卡（已自动缩小 16%）。可以精简这一段，或返回页面增大显示宽度后重新打开打印；点右侧「定位」可直接跳到这张卡。`,
+          `卡片 ${first.label} 的文字放不下这张卡（已自动缩小到 78%）。可以精简这一段，或返回页面增大显示宽度后重新打开打印；点右侧「定位」可直接跳到这张卡。`,
         );
       }
       setBlockedPhoto("");
@@ -325,15 +376,17 @@ export default function PrintView({
               <h3>
                 {paper.name}{" "}
                 {settings.orientation === "landscape" ? "横向" : "纵向"}
-                ，每面 {layout.perSheet} 张。
+                ，{groups.length} 种比例，共 {sheets} 张纸。
               </h3>
               <p>
-                {layout.cols} 列 × {layout.rows} 行 · 卡片{" "}
-                {Number(layout.cardW.toFixed(1))}×
-                {Number(layout.cardH.toFixed(1))}mm · 共 {sheets} 张纸（
-                {sheets * 2} 面）
+                {groups
+                  .map(
+                    (g) =>
+                      `${g.label} · ${g.items.length} 张（${g.layout.cols}×${g.layout.rows}，卡片 ${Number(g.layout.cardW.toFixed(1))}×${Number(g.layout.cardH.toFixed(1))}mm，${sheetCount(g.items.length, g.layout.perSheet)} 张纸）`,
+                  )
+                  .join("；")}
                 <br />
-                按纸张平分平铺，比例跟随页面（{appearance.ratio}）。
+                相同比例排在一起，正面与反面相邻成对。
                 <br />
                 打印时选实际大小 100%，关闭页眉页脚，开启背景图形。
               </p>
@@ -510,11 +563,6 @@ export default function PrintView({
           id="print-root"
           data-grid={settings.grid ? "on" : undefined}
           data-frame={appearance.frame}
-          data-wide={
-            RATIOS[appearance.ratio].w > RATIOS[appearance.ratio].h
-              ? "on"
-              : undefined
-          }
           style={cssVars}
         >
           {test
@@ -535,61 +583,85 @@ export default function PrintView({
                   ))}
                 </section>
               ))
-            : faces.map((page: (Item | null)[], pageIndex: number) => (
-                <section className="print-page" key={pageIndex}>
-                  {page.map((item, j) =>
-                    item ? (
-                      <article
-                        data-photo={item.photo.id}
-                        className={
-                          "paper-card " +
-                          (pageIndex % 2 ? "paper-back" : "paper-front")
-                        }
-                        key={j}
-                      >
-                        <div className="paper-meta">
-                          {item.card.code} / 第{" "}
-                          {item.card.images.findIndex(
-                            (p) => p.id === item.photo.id,
-                          ) + 1}{" "}
-                          张{" "}
-                          <span>{pageIndex % 2 ? "拍摄笔记" : "姿势图鉴"}</span>
-                        </div>
-                        <h2>{item.card.title}</h2>
-                        {pageIndex % 2 ? (
-                          <div className="paper-notes">
-                            {Object.entries(labels).map(([k, l]) => (
-                              <p key={k}>
-                                <b>{l}</b>{" "}
-                                {item.notes[k as keyof Notes] || "未填写"}
-                              </p>
-                            ))}
-                          </div>
+            : groups.flatMap((group, gi) =>
+                group.faces.map((page, pi) => {
+                  const back = pi % 2 === 1;
+                  const cs = {
+                    "--paper-w": `${group.layout.paperW}mm`,
+                    "--paper-h": `${group.layout.paperH}mm`,
+                    "--card-w": `${group.layout.cardW}mm`,
+                    "--card-h": `${group.layout.cardH}mm`,
+                    "--cols": group.layout.cols,
+                    "--rows": group.layout.rows,
+                    "--gap": `${group.layout.gutter}mm`,
+                    "--card-fs": `calc(min(${group.layout.cardW}mm, ${group.layout.cardH}mm) * 0.0271)`,
+                  } as CSSProperties;
+                  return (
+                    <section
+                      className="print-page"
+                      key={`${gi}-${pi}`}
+                      data-wide={
+                        group.aspect.w > group.aspect.h ? "on" : undefined
+                      }
+                      data-short={
+                        group.layout.cardH <= group.layout.cardW * 1.15
+                          ? "on"
+                          : undefined
+                      }
+                      style={cs}
+                    >
+                      {page.map((item, j) =>
+                        item ? (
+                          <article
+                            data-photo={item.photo.id}
+                            className={
+                              "paper-card " +
+                              (back ? "paper-back" : "paper-front")
+                            }
+                            key={j}
+                          >
+                            <div className="paper-meta">
+                              {item.card.code} / 第{" "}
+                              {item.card.images.findIndex(
+                                (p) => p.id === item.photo.id,
+                              ) + 1}{" "}
+                              张 <span>{back ? "拍摄笔记" : "姿势图鉴"}</span>
+                            </div>
+                            <h2>{item.card.title}</h2>
+                            {back ? (
+                              <div className="paper-notes">
+                                {Object.entries(labels).map(([k, l]) => (
+                                  <p key={k}>
+                                    <b>{l}</b>{" "}
+                                    {item.notes[k as keyof Notes] || "未填写"}
+                                  </p>
+                                ))}
+                              </div>
+                            ) : (
+                              <Photo
+                                eager
+                                image={item.photo}
+                                title={item.card.title}
+                                shareId={shareId}
+                              />
+                            )}
+                            <div className="paper-foot">
+                              {item.photo.ai ? "AI 生成参考图" : "用户图片"}{" "}
+                              <span>
+                                POSE ATLAS /{" "}
+                                {Number(group.layout.cardW.toFixed(1))} ×{" "}
+                                {Number(group.layout.cardH.toFixed(1))}
+                              </span>
+                            </div>
+                          </article>
                         ) : (
-                          <>
-                            <Photo
-                              eager
-                              image={item.photo}
-                              title={item.card.title}
-                              shareId={shareId}
-                            />
-                          </>
-                        )}
-                        <div className="paper-foot">
-                          {item.photo.ai ? "AI 生成参考图" : "用户图片"}{" "}
-                          <span>
-                            POSE ATLAS / {Number(layout.cardW.toFixed(1))} ×{" "}
-                            {Number(layout.cardH.toFixed(1))}
-                          </span>
-                        </div>
-                      </article>
-                    ) : (
-                      <div className="paper-empty" key={j} />
-                    ),
-                  )}
-                </section>
-              ))}
-        </div>,
+                          <div className="paper-empty" key={j} />
+                        ),
+                      )}
+                    </section>
+                  );
+                }),
+              )}        </div>,
         document.body,
       )}
     </>

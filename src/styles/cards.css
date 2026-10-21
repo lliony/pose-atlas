@@ -4,7 +4,9 @@
 .card-display-controls select { min-height:40px; min-width:120px; color:var(--ink); }
 .style-options { border:1px solid var(--line); padding:12px; margin-bottom:18px; }
 .style-options label { display:inline-flex; align-items:center; gap:6px; margin:6px 14px 6px 0; }
-.style-options input { width:auto; }
+/* 全局 label input 有 margin-top:7px，会把复选框按下去，这里归零对齐 */
+.style-options label input { width:auto; margin:0; flex:none; }
+.style-options legend { padding:0 6px; }
 .card-grid { align-items:start; }
 .pose-card .flip-shell { display:block; position:relative; aspect-ratio:var(--card-aspect, 3 / 4); }
 .pose-card .face { position:absolute; inset:0; }

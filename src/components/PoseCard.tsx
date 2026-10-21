@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { resolveNotes } from "../lib/model";
 import { labels, type Card } from "../lib/types";
+import { aspectOf, type PhotoSize } from "../lib/image-ratio";
 import Photo from "./Photo";
 export default function PoseCard({
   card,
@@ -11,6 +12,7 @@ export default function PoseCard({
   onDelete,
   onRead,
   shareId,
+  sizes,
   readonly = false,
 }: {
   card: Card;
@@ -21,6 +23,7 @@ export default function PoseCard({
   onDelete: () => void;
   onRead: () => void;
   shareId?: string;
+  sizes?: Map<string, PhotoSize>;
   readonly?: boolean;
 }) {
   const [index, setIndex] = useState(0),
@@ -28,7 +31,10 @@ export default function PoseCard({
   const photo = card.images[Math.min(index, card.images.length - 1)],
     notes = resolveNotes(card, photo);
   return (
-    <article className={"pose-card " + (selected ? "selected" : "")}>
+    <article
+      className={"pose-card " + (selected ? "selected" : "")}
+      style={{ "--card-aspect": aspectOf(photo, sizes ?? new Map()) } as CSSProperties}
+    >
       <div className={"flip-shell " + (flipped ? "is-flipped" : "")}>
         <section className="face front" aria-hidden={flipped} inert={flipped}>
           <div className="card-meta">

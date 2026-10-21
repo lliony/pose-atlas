@@ -22,8 +22,11 @@ export const MARGIN_X = 8.5;
 export const MARGIN_Y = 5;
 export const GUTTER = 0;
 
-/** 平铺时的基准短边（mm）与最大放大倍数。 */
+/** 平铺时的基准短边（mm）、最小短边与最大放大倍数。 */
 export const TARGET_SHORT_EDGE = 70;
+export const MIN_SHORT_EDGE = 65;
+/** 卡片最小高度：低于这个值，背面放不下五段笔记。 */
+export const MIN_CARD_HEIGHT = 84;
 export const MAX_UPSCALE = 1.35;
 
 export type PrintLayout = {
@@ -52,40 +55,68 @@ export function fillLayout(options: {
   orientation: Orientation;
   ratio: RatioId;
 }): PrintLayout {
-  const { paper, orientation, ratio } = options;
+  return layoutForAspect({
+    paper: options.paper,
+    orientation: options.orientation,
+    aspect: RATIOS[options.ratio],
+    ratio: options.ratio,
+  });
+}
+
+/** 与 fillLayout 同一套规则，但比例用图片自身的宽高（w/h），供混合比例分组排版使用。 */
+export function layoutForAspect(options: {
+  paper: PaperId;
+  orientation: Orientation;
+  aspect: { w: number; h: number };
+  ratio?: RatioId;
+}): PrintLayout {
+  const { paper, orientation, aspect } = options;
   const sheet = PAPERS[paper];
   const paperW = orientation === "landscape" ? sheet.h : sheet.w;
   const paperH = orientation === "landscape" ? sheet.w : sheet.h;
   const usableW = paperW - MARGIN_X * 2;
   const usableH = paperH - MARGIN_Y * 2;
-  const ratioW = RATIOS[ratio].w;
-  const ratioH = RATIOS[ratio].h;
+  const ratioW = aspect.w;
+  const ratioH = aspect.h;
   const landscape = ratioW > ratioH;
 
-  // 基准卡：短边 70mm
-  let cardW = landscape ? (TARGET_SHORT_EDGE * ratioW) / ratioH : TARGET_SHORT_EDGE;
-  let cardH = landscape ? TARGET_SHORT_EDGE : (TARGET_SHORT_EDGE * ratioH) / ratioW;
-  // 纸太小装不下基准卡时先缩到放得下
-  const fit = Math.min(1, usableW / cardW, usableH / cardH);
-  cardW *= fit;
-  cardH *= fit;
-
-  const cols = Math.max(1, Math.floor((usableW + 1e-9) / cardW));
-  const rows = Math.max(1, Math.floor((usableH + 1e-9) / cardH));
-  // 把剩余空间平摊到卡片上，让整页铺满
-  const upscale = Math.min(
-    MAX_UPSCALE,
-    usableW / (cols * cardW),
-    usableH / (rows * cardH),
-  );
-  cardW *= upscale;
-  cardH *= upscale;
+  // 在 1..6 行列里挑：卡片短边不超过 70×1.35，且占纸最多的组合
+  const maxShort = TARGET_SHORT_EDGE * MAX_UPSCALE;
+  let best = { cols: 1, rows: 1, cardW: 0, cardH: 0, fill: -1 };
+  for (let cols = 1; cols <= 6; cols++) {
+    for (let rows = 1; rows <= 6; rows++) {
+      const cellW = usableW / cols;
+      const cellH = usableH / rows;
+      let w = Math.min(cellW, (cellH * ratioW) / ratioH);
+      let h = (w * ratioH) / ratioW;
+      // 短边封顶，避免整页变成一张海报
+      const short = Math.min(w, h);
+      if (short > maxShort) {
+        const shrink = maxShort / short;
+        w *= shrink;
+        h *= shrink;
+      }
+      if (Math.min(w, h) < MIN_SHORT_EDGE) continue;
+      // 卡片高度不足时背面五段笔记放不下，直接排除
+      if (h < MIN_CARD_HEIGHT) continue;
+      const fill = (cols * rows * w * h) / (usableW * usableH);
+      if (fill > best.fill + 1e-9) best = { cols, rows, cardW: w, cardH: h, fill };
+    }
+  }
+  if (best.fill < 0) {
+    // 极端纸张：单张铺满
+    const w = Math.min(usableW, (usableH * ratioW) / ratioH);
+    best = { cols: 1, rows: 1, cardW: w, cardH: (w * ratioH) / ratioW, fill: 1 };
+  }
+  const { cols, rows } = best;
+  let cardW = best.cardW;
+  let cardH = best.cardH;
 
   const round = (n: number) => Math.round(n * 10) / 10;
   return {
     paper,
     orientation,
-    ratio,
+    ratio: options.ratio ?? "3:4",
     paperW: round(paperW),
     paperH: round(paperH),
     cardW: round(cardW),
