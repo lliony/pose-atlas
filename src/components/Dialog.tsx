@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { lockScroll, unlockScroll } from "../lib/scroll-lock";
 export default function Dialog({
   title,
   children,
@@ -13,11 +14,8 @@ export default function Dialog({
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     ref.current?.showModal();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
+    lockScroll();
+    return () => unlockScroll();
   }, []);
   return (
     <dialog

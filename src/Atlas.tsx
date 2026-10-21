@@ -573,7 +573,21 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                   <label>卡片边框<select value={appearance.frame} onChange={e=>setAppearance({...appearance,frame:e.target.value as CardAppearance['frame']})}><option value="thin">细边框</option><option value="none">无边框</option></select></label>
                   <label>人物性别<select value={gender} onChange={e=>setGender(e.target.value)}>{['全部',...GENDERS,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
                   <label>气质风格<select value={styleFilter} onChange={e=>setStyleFilter(e.target.value)}>{['全部',...STYLES,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
-                  {(gender!=='全部'||styleFilter!=='全部'||ratioFilter!=='全部')&&<button onClick={()=>{setGender('全部');setStyleFilter('全部');setRatioFilter('全部');}}>清除筛选</button>}
+                  {(gender !== '全部' || styleFilter !== '全部' || ratioFilter !== '全部') && (
+                    <label className="clear-filters-item">
+                      <span>已筛选</span>
+                      <button
+                        className="clear-filters"
+                        onClick={() => {
+                          setGender('全部');
+                          setStyleFilter('全部');
+                          setRatioFilter('全部');
+                        }}
+                      >
+                        清除筛选
+                      </button>
+                    </label>
+                  )}
                 </div>
               )}
               {view !== "albums" && (

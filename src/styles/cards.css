@@ -166,3 +166,36 @@
   background: var(--danger);
   color: var(--color-paper);
 }
+/* 清除筛选：与筛选条件同一行、同一高度，右对齐 */
+.card-display-controls .clear-filters-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-left: auto;
+}
+.card-display-controls .clear-filters-item > span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-display-controls .clear-filters {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.card-display-controls .clear-filters:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+@media (max-width: 760px) {
+  .card-display-controls .clear-filters-item {
+    flex: 1 1 135px;
+    margin-left: 0;
+  }
+  .card-display-controls .clear-filters {
+    width: 100%;
+  }
+}
