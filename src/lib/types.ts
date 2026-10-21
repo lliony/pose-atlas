@@ -19,6 +19,8 @@ export type Card = {
   code: string;
   title: string;
   tags: string[];
+  gender?: string;
+  styles?: string[];
   notes: Notes;
   privateNote?: string;
   images: Photo[];

@@ -3,6 +3,7 @@ import { uploadImage } from "../services/api";
 import { useEffect, useRef, useState } from "react";
 import Dialog from "./Dialog";
 import Photo from "./Photo";
+import { GENDERS, STYLES } from '../lib/card-appearance';
 import {
   labels,
   uid,
@@ -263,6 +264,10 @@ export default function Editor({
             <p role="status">{uploading}</p>
           </section>
           <section className="editor-fields">
+            <div className="form-row">
+              <label>人物性别<select value={value.gender || ''} onChange={e=>update({gender:e.target.value || undefined})}><option value="">未分类</option>{GENDERS.map(g=><option key={g}>{g}</option>)}</select></label>
+            </div>
+            <fieldset className="style-options"><legend>气质风格（可多选）</legend>{STYLES.map(s=><label key={s}><input type="checkbox" checked={value.styles?.includes(s) || false} onChange={e=>update({styles:e.target.checked?[...(value.styles || []),s]:(value.styles || []).filter(x=>x!==s)})}/>{s}</label>)}</fieldset>
             <div className="form-row">
               <label>
                 卡片标题

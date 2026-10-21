@@ -1,4 +1,5 @@
 import seed from "../lib/seed.json";
+import { addReferenceCards } from '../lib/reference-cards';
 import { snapshot, validateState } from "../lib/model";
 import type { State, Publication } from "../lib/types";
 import { database, read, write } from "./storage";
@@ -38,7 +39,9 @@ async function workspace(): Promise<Workspace> {
     let value: Workspace;
     request.onsuccess = () => {
       value = request.result || initial();
-      if (!request.result) store.put(value, "main");
+      const upgraded = addReferenceCards(value.state);
+      if(upgraded !== value.state) value = {...value, state:upgraded, revision:value.revision + 1};
+      if (!request.result || upgraded !== request.result.state) store.put(value, "main");
     };
     t.oncomplete = () => resolve(value);
     t.onerror = () => reject(error("本机资料读取失败"));

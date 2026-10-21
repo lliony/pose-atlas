@@ -35,8 +35,10 @@ const httpsTransport: Transport = (endpoint, body, config, signal) => new Promis
 function upstreamError(status: number, body: string): AiError {
   if (status === 401 || status === 403) return new AiError('AUTH_FAILED');
   if (status === 429) return new AiError('RATE_LIMITED');
+  if (status === 413) return new AiError('PAYLOAD_TOO_LARGE');
   let code = '';
   try { const error = JSON.parse(body).error; code = `${error?.code ?? ''} ${error?.type ?? ''} ${error?.message ?? ''}`.toLowerCase(); } catch { /* Never expose upstream body. */ }
+  if (status === 400 && /\b(?:context_length_exceeded|request_too_large|payload_too_large|input_too_large|content_too_large)\b/.test(code)) return new AiError('PAYLOAD_TOO_LARGE');
   if (status >= 400 && /\binvalid_image(?:_format|_url)?\b/.test(code)) return new AiError('IMAGE_UNSUPPORTED');
   if (status >= 400 && /unsupported_image|image_not_supported|does not support (image|vision)|image inputs? (are |is )?not supported/.test(code)) {
     const error = new AiError('IMAGE_UNSUPPORTED');

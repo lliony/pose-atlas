@@ -4,6 +4,7 @@ import https from 'node:https';
 import { EventEmitter } from 'node:events';
 import assert from 'node:assert/strict';
 import { createProvider, type Transport } from '../server/ai/provider.ts';
+import { AiError } from '../server/ai/errors.ts';
 import type { AiRequest } from '../src/lib/ai-types.ts';
 
 const config = { baseUrl: 'https://8.8.8.8/v1', apiKey: 'secret', model: 'vision' };
@@ -36,7 +37,20 @@ for (const [label, body, status, code] of [
   ['image', JSON.stringify({ error: { code: 'unsupported_image' } }), 400, 'IMAGE_UNSUPPORTED'],
   ['invalid image', JSON.stringify({ error: { code: 'invalid_image' } }), 400, 'IMAGE_UNSUPPORTED'],
   ['invalid image format', JSON.stringify({ error: { code: 'invalid_image_format' } }), 400, 'IMAGE_UNSUPPORTED'],
+  ['upstream HTTP 413', 'sensitive provider detail', 413, 'PAYLOAD_TOO_LARGE'],
+  ['context length code', JSON.stringify({ error: { code: 'context_length_exceeded', message: 'sensitive provider detail' } }), 400, 'PAYLOAD_TOO_LARGE'],
+  ['request size code', JSON.stringify({ error: { type: 'request_too_large', message: 'sensitive provider detail' } }), 400, 'PAYLOAD_TOO_LARGE'],
 ] as const) test(label, async () => { await assert.rejects(adapter(body, status).recommend(config, input, new AbortController().signal), { code }); });
+test('size errors use fixed guidance without exposing upstream body', async () => {
+  const body = JSON.stringify({ error: { code: 'context_length_exceeded', message: 'sensitive provider detail' } });
+  await assert.rejects(adapter(body, 400).recommend(config, input, new AbortController().signal), error => {
+    assert.ok(error instanceof AiError);
+    assert.equal(error.code, 'PAYLOAD_TOO_LARGE');
+    assert.match(error.message, /缩小范围/);
+    assert.doesNotMatch(error.message, /sensitive provider detail/);
+    return true;
+  });
+});
 test('single wrapping JSON fence is accepted', async () => {
   assert.deepEqual(await adapter(reply('```json\n' + JSON.stringify(result) + '\n```')).recommend(config, input, new AbortController().signal), result);
 });

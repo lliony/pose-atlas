@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { CARD_RATIOS, GENDERS, STYLES, normalizeAppearance, matchesPerson, type CardAppearance } from './lib/card-appearance';
 import AiRecommendation from "./components/ai/AiRecommendation";
 import { createConfigStore } from "./services/ai-config";
 import seed from "./lib/seed.json";
@@ -13,7 +14,7 @@ import {
 } from "./lib/types";
 import { resolveNotes } from "./lib/model";
 import PoseCard from "./components/PoseCard";
-import ThemeSwitch from "./components/ThemeSwitch";
+import SystemSettings from "./components/SystemSettings";
 import Photo from "./components/Photo";
 import Dialog from "./components/Dialog";
 import Editor from "./components/Editor";
@@ -49,6 +50,15 @@ export default function Atlas({ shareId }: { shareId?: string }) {
     [shareAlbum, setShareAlbum] = useState<Album>();
   const owner = signed && !shareId;
   const [aiOpen, setAiOpen] = useState(false);
+  const [appearance,setAppearance] = useState<CardAppearance>(()=>{
+    try{return normalizeAppearance(JSON.parse(localStorage.getItem('pose-atlas:appearance') || 'null'));}catch{return normalizeAppearance(null);}
+  });
+  const [gender,setGender] = useState('全部');
+  const [styleFilter,setStyleFilter] = useState('全部');
+  const [screenCardWidth,setScreenCardWidth] = useState(320);
+  useEffect(()=>{try{localStorage.setItem('pose-atlas:appearance',JSON.stringify(appearance));}catch{}},[appearance]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [configVersion, setConfigVersion] = useState(0);
   const [showGrid, setShowGrid] = useState(() => {
     try {
       return localStorage.getItem("pose-atlas:grid") === "on";
@@ -60,9 +70,10 @@ export default function Atlas({ shareId }: { shareId?: string }) {
   const aiTrigger = useRef<HTMLButtonElement>(null);
   const detailReturnFocus = useRef<HTMLElement | null>(null);
   const openDetail = (card: Card) => {
-    detailReturnFocus.current = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    detailReturnFocus.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setDetail(card);
   };
   const aiStore = useMemo(
@@ -148,8 +159,9 @@ export default function Atlas({ shareId }: { shareId?: string }) {
       (c) =>
         (view === "trash" ? c.deleted : !c.deleted) &&
         (category === "all" || c.categoryId === category) &&
+        matchesPerson(c,gender,styleFilter) &&
         (!query ||
-          [c.title, c.code, ...c.tags]
+          [c.title, c.code, ...c.tags, c.gender || '', ...(c.styles || [])]
             .join(" ")
             .toLowerCase()
             .includes(query.toLowerCase())),
@@ -162,6 +174,8 @@ export default function Atlas({ shareId }: { shareId?: string }) {
     }
     try {
       if (shareId) await api("shares/" + shareId + "/export");
+      const measured = document.querySelector('.card-grid .flip-shell')?.getBoundingClientRect().width;
+      if(measured && measured > 0) setScreenCardWidth(measured);
       setPrintCards(cards);
     } catch (e: any) {
       setError(e.message);
@@ -215,7 +229,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
     }
   };
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-card-frame={appearance.frame} data-card-ratio={appearance.ratio} style={{'--card-aspect':appearance.ratio.replace(':',' / ')} as CSSProperties}>
       <aside className="sidebar">
         <a className="brand" href="/">
           <span className="brand-mark">
@@ -225,8 +239,8 @@ export default function Atlas({ shareId }: { shareId?: string }) {
             姿势图鉴<small>POSE ATLAS</small>
           </div>
         </a>
-        <div className="side-section">
-          <span className="eyebrow">YOUR VISUAL FIELD GUIDE</span>
+        <nav className="side-section overview-nav" aria-label="总览">
+          <span className="eyebrow">总览</span>
           <button
             className={
               view === "library" && category === "all" ? "nav active" : "nav"
@@ -248,7 +262,37 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               <small>{state.albums.length}</small>
             </button>
           )}
-        </div>
+          {owner && (
+            <button className="nav" onClick={() => setSettingsOpen(true)}>
+              <span>⚙ 系统设置</span>
+            </button>
+          )}
+          {owner && (
+            <button
+              className={view === "trash" ? "nav active" : "nav"}
+              onClick={() => {
+                setView("trash");
+                setCategory("all");
+              }}
+            >
+              <span>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+                </svg>{" "}
+                回收站
+              </span>
+              <small>{state.cards.filter((c) => c.deleted).length}</small>
+            </button>
+          )}
+        </nav>
         <div className="side-section">
           <div className="side-heading">
             <span className="eyebrow">按场景探索</span>
@@ -294,18 +338,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               制作我的口袋卡 ↗
             </button>
           </div>
-          {owner && (
-            <button
-              className="nav"
-              onClick={() => {
-                setView("trash");
-                setCategory("all");
-              }}
-            >
-              回收站{" "}
-              <small>{state.cards.filter((c) => c.deleted).length}</small>
-            </button>
-          )}
           <p className="side-foot">
             慢一点观察，拍出自己的风格。
             <br />
@@ -325,7 +357,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
             灵感库 <i>/</i> {shareId ? "公开卡片册" : "个人摄影工作台"}
           </span>
           <div className="topbar-actions">
-            <ThemeSwitch />
             {signed ? (
               <span className="account">
                 <b />{" "}
@@ -418,29 +449,6 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               </div>
             )}
             <section className="library">
-              {!shareId && (
-                <nav className="mobile-nav">
-                  <button
-                    onClick={() => {
-                      setView("library");
-                      setCategory("all");
-                    }}
-                  >
-                    全部灵感
-                  </button>
-                  <button onClick={() => setView("albums")}>我的卡片册</button>
-                  {owner && (
-                    <button
-                      onClick={() => {
-                        setView("trash");
-                        setCategory("all");
-                      }}
-                    >
-                      回收站
-                    </button>
-                  )}
-                </nav>
-              )}
               <div className="section-title">
                 <div>
                   <span className="eyebrow">
@@ -465,6 +473,41 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                   </h2>
                 </div>
                 <div className="actions">
+                  {view !== "albums" && (
+                    <button
+                      type="button"
+                      className="grid-toggle"
+                      aria-pressed={showGrid}
+                      aria-label={showGrid ? "隐藏构图网格" : "显示构图网格"}
+                      title="构图网格（3×3）"
+                      onClick={() => setShowGrid((v) => !v)}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        aria-hidden="true"
+                      >
+                        <rect
+                          x="3.5"
+                          y="3.5"
+                          width="17"
+                          height="17"
+                          rx="1.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"
+                          stroke="currentColor"
+                          strokeWidth="1.1"
+                        />
+                      </svg>
+                      <span>构图网格</span>
+                      <strong>{showGrid ? "开" : "关"}</strong>
+                    </button>
+                  )}
                   {owner && (
                     <button onClick={() => setManage(true)}>管理分类</button>
                   )}
@@ -488,6 +531,15 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                 </div>
               </div>
               {view !== "albums" && (
+                <div className="card-display-controls" aria-label="卡片显示与人物筛选">
+                  <label>照片比例<select aria-label="照片比例" value={appearance.ratio} onChange={e=>setAppearance({...appearance,ratio:e.target.value as CardAppearance['ratio']})}>{CARD_RATIOS.map(r=><option key={r} value={r}>{r} {r==='3:4'||r==='9:16'?'竖版':'横版'}</option>)}</select></label>
+                  <label>卡片边框<select value={appearance.frame} onChange={e=>setAppearance({...appearance,frame:e.target.value as CardAppearance['frame']})}><option value="thin">细边框</option><option value="none">无边框</option></select></label>
+                  <label>人物性别<select value={gender} onChange={e=>setGender(e.target.value)}>{['全部',...GENDERS,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
+                  <label>气质风格<select value={styleFilter} onChange={e=>setStyleFilter(e.target.value)}>{['全部',...STYLES,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
+                  {(gender!=='全部'||styleFilter!=='全部')&&<button onClick={()=>{setGender('全部');setStyleFilter('全部');}}>清除人物筛选</button>}
+                </div>
+              )}
+              {view !== "albums" && (
                 <div className="filterbar">
                   <div className="filter-pills">
                     <button
@@ -506,71 +558,27 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                       </button>
                     ))}
                   </div>
-                  <input
-                    className="search"
-                    aria-label="搜索姿势"
-                    placeholder="搜索姿势、标签或编号…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="icon-btn grid-toggle"
-                    aria-pressed={showGrid}
-                    aria-label={showGrid ? "隐藏构图网格" : "显示构图网格"}
-                    title="构图网格（3×3）"
-                    onClick={() => setShowGrid((v) => !v)}
-                  >
+                  <label className="library-search">
                     <svg
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
-                      width="18"
-                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
                       aria-hidden="true"
                     >
-                      <rect
-                        x="3.5"
-                        y="3.5"
-                        width="17"
-                        height="17"
-                        rx="1.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                      />
-                      <path
-                        d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"
-                        stroke="currentColor"
-                        strokeWidth="1.1"
-                      />
+                      <circle cx="10.5" cy="10.5" r="6.5" />
+                      <path d="m16 16 5 5" />
                     </svg>
-                  </button>
-                  {owner && (
-                    <button
-                      ref={aiTrigger}
-                      type="button"
-                      className="icon-btn ai-trigger"
-                      aria-label="AI 推荐"
-                      title="AI 推荐"
-                      onClick={() => setAiOpen(true)}
-                    >
-                      <svg
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                        />
-                      </svg>
-                      <span className="ai-tooltip" aria-hidden="true">
-                        AI 推荐
-                      </span>
-                    </button>
-                  )}
+                    <input
+                      className="search"
+                      aria-label="搜索姿势"
+                      placeholder="搜索姿势名称、标签或编号"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                    />
+                  </label>
                 </div>
               )}
               {view === "albums" ? (
@@ -825,13 +833,38 @@ export default function Atlas({ shareId }: { shareId?: string }) {
       )}
       {printCards && (
         <PrintView
+          appearance={appearance}
+          screenCardWidth={screenCardWidth}
           cards={printCards}
           shareId={shareId}
           onClose={() => setPrintCards(undefined)}
         />
       )}
-      {aiOpen && owner && (
+      {owner && (
+        <button
+          ref={aiTrigger}
+          className="ai-launcher"
+          aria-label="AI 推荐"
+          aria-expanded={aiOpen}
+          onClick={() => setAiOpen((v) => !v)}
+        >
+          ✧ AI 推荐
+        </button>
+      )}
+      {settingsOpen && owner && (
+        <SystemSettings
+          store={aiStore}
+          showGrid={showGrid}
+          onGrid={setShowGrid}
+          onChanged={() => setConfigVersion((v) => v + 1)}
+          onClose={() => setSettingsOpen(false)}
+        />
+      )}
+      {owner && (
         <AiRecommendation
+          open={aiOpen}
+          configVersion={configVersion}
+          onSettings={() => setSettingsOpen(true)}
           state={state}
           userId={userId}
           store={aiStore}
@@ -844,13 +877,18 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         />
       )}
       {detail && (
-        <Dialog title={detail.title} wide onClose={() => {
-          setDetail(undefined);
-          requestAnimationFrame(() => {
-            if (detailReturnFocus.current?.isConnected) detailReturnFocus.current.focus();
-            detailReturnFocus.current = null;
-          });
-        }}>
+        <Dialog
+          title={detail.title}
+          wide
+          onClose={() => {
+            setDetail(undefined);
+            setTimeout(() => {
+              if (detailReturnFocus.current?.isConnected)
+                detailReturnFocus.current.focus();
+              detailReturnFocus.current = null;
+            }, 0);
+          }}
+        >
           <div className="detail-content">
             {detail.images.map((p) => (
               <section key={p.id}>

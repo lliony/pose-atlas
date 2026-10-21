@@ -1,5 +1,6 @@
 import type { Card, Photo, Album, State, Notes, Publication } from "./types.ts";
 import { backIndex } from "./print.ts";
+import { GENDERS, STYLES } from './card-appearance.ts';
 export const fields: (keyof Notes)[] = [
   "pose",
   "camera",
@@ -27,6 +28,8 @@ export function snapshot(state: State, album: Album): Publication {
         code: c.code,
         title: c.title,
         tags: [...c.tags],
+        gender: c.gender,
+        styles: c.styles ? [...c.styles] : undefined,
         notes: Object.fromEntries(
           fields.map((k) => [k, c.notes[k] || ""]),
         ) as Notes,
@@ -111,13 +114,15 @@ export function validateState(s: State) {
     if (!Array.isArray(c.tags) || c.tags.length > 12)
       throw Error("标签格式不正确");
     c.tags.forEach((x) => str(x, 40));
+    if(c.gender !== undefined && !(GENDERS as readonly string[]).includes(c.gender)) throw Error('性别分类无效');
+    if(c.styles !== undefined && (!Array.isArray(c.styles) || c.styles.length > STYLES.length || c.styles.some(x=>!(STYLES as readonly string[]).includes(x)) || new Set(c.styles).size !== c.styles.length)) throw Error('气质风格无效');
     if (!Array.isArray(c.images) || !c.images.length || c.images.length > 20)
       throw Error("每张卡片需1至20张图片");
     for (const p of c.images) {
       id(p.id);
       if (
         typeof p.src !== "string" ||
-        !/^\/(images\/(street|cafe|park|sea|indoor|stairs)\.png|api\/media\/[a-zA-Z0-9_-]+)$/.test(
+        !/^\/(images\/(street|cafe|park|sea|indoor|stairs|pose-reference-styles)\.png|api\/media\/[a-zA-Z0-9_-]+)$/.test(
           p.src,
         )
       )
@@ -125,7 +130,7 @@ export function validateState(s: State) {
       if (
         p.panel !== undefined &&
         p.panel !== null &&
-        ![0, 1, 2].includes(p.panel)
+        !(p.src === '/images/pose-reference-styles.png' ? [0,1,2,3,4,5] : [0,1,2]).includes(p.panel)
       )
         throw Error("图片分栏无效");
       notes(p.notes || {});

@@ -8,14 +8,11 @@ import { printSheets, resolveNotes } from "../lib/model";
 import {
   PAPERS,
   RATIOS,
-  SIZES,
   backIndex,
-  printLayout,
+  screenPrintLayout,
   sheetCount,
   type Orientation,
   type PaperId,
-  type RatioId,
-  type SizeId,
 } from "../lib/print";
 import {
   labels,
@@ -28,8 +25,6 @@ type Item = { card: Card; photo: Picture; notes: Notes };
 type Settings = {
   paper: PaperId;
   orientation: Orientation;
-  size: SizeId;
-  ratio: RatioId;
   edge: "short" | "long";
   grid: boolean;
 };
@@ -38,8 +33,6 @@ const SETTINGS_KEY = "pose-atlas:print";
 const DEFAULTS: Settings = {
   paper: "a4",
   orientation: "landscape",
-  size: "medium",
-  ratio: "7:10",
   edge: "short",
   grid: false,
 };
@@ -54,8 +47,6 @@ function loadSettings(): Settings {
         raw.orientation === "portrait" || raw.orientation === "landscape"
           ? raw.orientation
           : DEFAULTS.orientation,
-      size: raw.size in SIZES ? raw.size : DEFAULTS.size,
-      ratio: raw.ratio in RATIOS ? raw.ratio : DEFAULTS.ratio,
       edge: raw.edge === "long" ? "long" : "short",
       grid: raw.grid === true,
     };
@@ -68,10 +59,17 @@ export default function PrintView({
   cards,
   onClose,
   shareId,
+  appearance,
+  screenCardWidth,
 }: {
   cards: Card[];
   onClose: () => void;
   shareId?: string;
+  appearance: {
+    ratio: "3:4" | "4:3" | "9:16" | "16:9";
+    frame: "thin" | "none";
+  };
+  screenCardWidth: number;
 }) {
   const [items, setItems] = useState<Item[]>(() =>
       cards.flatMap((card) =>
@@ -88,7 +86,8 @@ export default function PrintView({
     [settings, setSettings] = useState<Settings>(loadSettings),
     [test, setTest] = useState(false),
     [printing, setPrinting] = useState(false),
-    [printError, setPrintError] = useState("");
+    [printError, setPrintError] = useState(""),
+    [blockedPhoto, setBlockedPhoto] = useState("");
 
   const patch = (next: Partial<Settings>) =>
     setSettings((s) => ({ ...s, ...next }));
@@ -103,18 +102,20 @@ export default function PrintView({
 
   const layout = useMemo(
     () =>
-      printLayout({
+      screenPrintLayout({
         paper: settings.paper,
         orientation: settings.orientation,
-        ratio: settings.ratio,
-        size: settings.size,
+        ratio: appearance.ratio,
+        screenCardWidth,
       }),
-    [settings.paper, settings.orientation, settings.ratio, settings.size],
+    [settings.paper, settings.orientation, appearance.ratio, screenCardWidth],
   );
 
   // @page 尺寸只能靠注入样式，才能做到“选什么纸就印什么纸”
   useEffect(() => {
-    let style = document.querySelector<HTMLStyleElement>("style[data-print-page]");
+    let style = document.querySelector<HTMLStyleElement>(
+      "style[data-print-page]",
+    );
     if (!style) {
       style = document.createElement("style");
       style.dataset.printPage = "";
@@ -138,6 +139,8 @@ export default function PrintView({
   const print = async () => {
     setPrinting(true);
     setPrintError("");
+    setBlockedPhoto("");
+    const root = document.getElementById("print-root")!;
     try {
       await document.fonts.ready;
       const urls = [
@@ -171,21 +174,70 @@ export default function PrintView({
       const root = document.getElementById("print-root")!;
       root.classList.add("measure-print");
       await new Promise((r) => requestAnimationFrame(r));
-      const overflow = Array.from(
-        root.querySelectorAll(".paper-notes,.paper-pose,.paper-card h2"),
-      ).find((el) => el.scrollHeight > el.clientHeight + 1);
-      root.classList.remove("measure-print");
-      if (overflow && !test)
+
+      /*
+       * 预检：先让每张卡的笔记自己缩一点字号（最多 16%），实在放不下才拦下来。
+       * 用几何位置判断而不是 scrollHeight——flex + overflow:hidden 下它会被夹住。
+       */
+      const overflows = (el: Element) => {
+        if (
+          el.scrollHeight > el.clientHeight + 1 ||
+          el.scrollWidth > el.clientWidth + 1
+        )
+          return true;
+        const box = el.getBoundingClientRect();
+        let bottom = box.top;
+        for (const child of Array.from(el.children))
+          bottom = Math.max(bottom, child.getBoundingClientRect().bottom);
+        return bottom - box.bottom > 0.5;
+      };
+      const fitNotes = (card: Element) => {
+        const notes = card.querySelector<HTMLElement>(".paper-notes");
+        if (!notes) return true;
+        notes.style.removeProperty("--notes-scale");
+        let scale = 1;
+        while (overflows(notes) && scale > 0.84) {
+          scale = Math.round((scale - 0.04) * 100) / 100;
+          notes.style.setProperty("--notes-scale", String(scale));
+        }
+        return !overflows(notes);
+      };
+      const blocked: { photoId: string; label: string }[] = [];
+      if (!test) {
+        root.querySelectorAll<HTMLElement>(".paper-card").forEach((card) => {
+          if (fitNotes(card)) {
+            const text = card.querySelector<HTMLElement>(".paper-pose, h2");
+            if (text && overflows(text))
+              blocked.push({
+                photoId: card.dataset.photo || "",
+                label: (
+                  card.querySelector(".paper-meta")?.textContent || ""
+                ).trim(),
+              });
+            return;
+          }
+          blocked.push({
+            photoId: card.dataset.photo || "",
+            label: (
+              card.querySelector(".paper-meta")?.textContent || ""
+            ).trim(),
+          });
+        });
+      }
+      const first = blocked[0];
+      if (first) {
+        setBlockedPhoto(first.photoId);
         throw Error(
-          "卡片 " +
-            overflow.closest(".paper-card")?.querySelector(".paper-meta")
-              ?.textContent +
-            " 的文字超出纸面，请精简摘要、换成更大的卡片，或减少换行。",
+          `卡片 ${first.label} 的文字放不下这张卡（已自动缩小 16%）。可以精简这一段，或返回页面增大显示宽度后重新打开打印；点右侧「定位」可直接跳到这张卡。`,
         );
+      }
+      setBlockedPhoto("");
+      root.classList.remove("measure-print");
       window.print();
     } catch (e: any) {
       setPrintError(e.message);
     } finally {
+      root.classList.remove("measure-print");
       setPrinting(false);
     }
   };
@@ -196,6 +248,7 @@ export default function PrintView({
     "--paper-h": `${layout.paperH}mm`,
     "--card-w": `${layout.cardW}mm`,
     "--card-h": `${layout.cardH}mm`,
+    "--frame-width": `${1.5875 * layout.scale}mm`,
     "--cols": layout.cols,
     "--rows": layout.rows,
     "--gap": `${layout.gutter}mm`,
@@ -207,17 +260,23 @@ export default function PrintView({
         <div className="print-settings">
           <div className="print-intro">
             <div className="paper-icon">
-              {layout.cardW}
-              <span>× {layout.cardH} mm</span>
+              {Number(layout.cardW.toFixed(1))}
+              <span>× {Number(layout.cardH.toFixed(1))} mm</span>
             </div>
             <div>
               <h3>
-                {paper.name} {settings.orientation === "landscape" ? "横向" : "纵向"}
+                {paper.name}{" "}
+                {settings.orientation === "landscape" ? "横向" : "纵向"}
                 ，每面 {layout.perSheet} 张。
               </h3>
               <p>
-                {layout.cols} 列 × {layout.rows} 行 · 卡片 {layout.cardW}×
-                {layout.cardH}mm · 共 {sheets} 张纸（{sheets * 2} 面）
+                {layout.cols} 列 × {layout.rows} 行 · 卡片{" "}
+                {Number(layout.cardW.toFixed(1))}×
+                {Number(layout.cardH.toFixed(1))}mm · 共 {sheets} 张纸（
+                {sheets * 2} 面）
+                <br />
+                沿用当前页面卡片的比例与宽度
+                {layout.scale < 1 ? "（超出纸张时已等比缩小）" : ""}。
                 <br />
                 打印时选实际大小 100%，关闭页眉页脚，开启背景图形。
               </p>
@@ -247,32 +306,6 @@ export default function PrintView({
               >
                 <option value="landscape">横向</option>
                 <option value="portrait">纵向</option>
-              </select>
-            </label>
-            <label>
-              卡片尺寸
-              <select
-                value={settings.size}
-                onChange={(e) => patch({ size: e.target.value as SizeId })}
-              >
-                {(Object.keys(SIZES) as SizeId[]).map((id) => (
-                  <option key={id} value={id}>
-                    {SIZES[id].name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              卡片比例
-              <select
-                value={settings.ratio}
-                onChange={(e) => patch({ ratio: e.target.value as RatioId })}
-              >
-                {(Object.keys(RATIOS) as RatioId[]).map((id) => (
-                  <option key={id} value={id}>
-                    {RATIOS[id].name}
-                  </option>
-                ))}
               </select>
             </label>
           </div>
@@ -312,7 +345,7 @@ export default function PrintView({
           </p>
           <div className="print-pick">
             {items.map((item, index) => (
-              <details key={item.photo.id}>
+              <details key={item.photo.id} data-photo={item.photo.id}>
                 <summary>
                   <input
                     aria-label={
@@ -373,33 +406,55 @@ export default function PrintView({
             </p>
           )}
         </div>
-        {printError && (
-          <p className="form-error" role="alert">
-            {printError}
-          </p>
+        {printError || blockedPhoto ? (
+          <div className="dialog-footer print-footer">
+            <span className="print-footer-msg" role="alert">
+              {printError}
+            </span>
+            {blockedPhoto && (
+              <button
+                onClick={() => {
+                  const el = document.querySelector<HTMLDetailsElement>(
+                    `.print-pick details[data-photo="${blockedPhoto}"]`,
+                  );
+                  if (!el) return;
+                  el.open = true;
+                  el.scrollIntoView({ block: "center", behavior: "smooth" });
+                }}
+              >
+                定位
+              </button>
+            )}
+            <button onClick={onClose}>返回</button>
+            <button className="primary" onClick={print} disabled={printing}>
+              {printing ? "正在准备…" : "重新打印 ↗"}
+            </button>
+          </div>
+        ) : (
+          <div className="dialog-footer">
+            <span>
+              {test
+                ? "校验页 2 面"
+                : `${list.length} 张卡片 · ${sheets} 张纸 · ${sheets * 2} 面`}
+            </span>
+            <button onClick={onClose}>返回</button>
+            <button
+              className="primary"
+              disabled={printing || (!test && (!list.length || tooLong))}
+              onClick={print}
+            >
+              {printing ? "正在准备…" : "打印 / 另存 PDF ↗"}
+            </button>
+          </div>
         )}
-        <div className="dialog-footer">
-          <span>
-            {test
-              ? "校验页 2 面"
-              : `${list.length} 张卡片 · ${sheets} 张纸 · ${sheets * 2} 面`}
-          </span>
-          <button onClick={onClose}>返回</button>
-          <button
-            className="primary"
-            disabled={printing || (!test && (!list.length || tooLong))}
-            onClick={print}
-          >
-            {printing ? "正在准备…" : "打印 / 另存 PDF ↗"}
-          </button>
-        </div>
       </Dialog>
       {createPortal(
         <div
           id="print-root"
           data-grid={settings.grid ? "on" : undefined}
+          data-frame={appearance.frame}
           data-wide={
-            RATIOS[settings.ratio].w > RATIOS[settings.ratio].h
+            RATIOS[appearance.ratio].w > RATIOS[appearance.ratio].h
               ? "on"
               : undefined
           }
@@ -411,7 +466,8 @@ export default function PrintView({
                   {Array.from({ length: layout.perSheet }, (_, i) =>
                     side === 0
                       ? i + 1
-                      : backIndex(i, layout.cols, layout.rows, settings.edge) + 1,
+                      : backIndex(i, layout.cols, layout.rows, settings.edge) +
+                        1,
                   ).map((n) => (
                     <article className="paper-card test-card" key={n}>
                       ↑ 上方<h1>{n}</h1>
@@ -427,6 +483,7 @@ export default function PrintView({
                   {page.map((item, j) =>
                     item ? (
                       <article
+                        data-photo={item.photo.id}
                         className={
                           "paper-card " +
                           (pageIndex % 2 ? "paper-back" : "paper-front")
@@ -459,16 +516,13 @@ export default function PrintView({
                               title={item.card.title}
                               shareId={shareId}
                             />
-                            <p className="paper-pose">{item.notes.pose}</p>
-                            <div className="paper-flip">
-                              翻到背面，查看机位与构图 →
-                            </div>
                           </>
                         )}
                         <div className="paper-foot">
                           {item.photo.ai ? "AI 生成参考图" : "用户图片"}{" "}
                           <span>
-                            POSE ATLAS / {layout.cardW} × {layout.cardH}
+                            POSE ATLAS / {Number(layout.cardW.toFixed(1))} ×{" "}
+                            {Number(layout.cardH.toFixed(1))}
                           </span>
                         </div>
                       </article>

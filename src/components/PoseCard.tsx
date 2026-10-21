@@ -33,7 +33,7 @@ export default function PoseCard({
         <section className="face front" aria-hidden={flipped} inert={flipped}>
           <div className="card-meta">
             <span>
-              {card.code} <i>/</i> {category}
+              <span className="pose-code">{card.code}</span> <span>{category}</span>
             </span>
             <button
               className={"check-btn " + (selected ? "checked" : "")}
@@ -59,7 +59,7 @@ export default function PoseCard({
               )}
             </div>
             <p className="tags">
-              {card.tags.join(" · ")} <span> / </span> {card.images.length}{" "}
+              {[...new Set([...(card.gender ? [card.gender] : []), ...(card.styles || []), ...card.tags])].join(" · ")} <span> / </span> {card.images.length}{" "}
               张参考
             </p>
             <div className="mini-note">

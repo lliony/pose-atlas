@@ -12,8 +12,6 @@
 #print-root {
   --paper-w: 297mm;
   --paper-h: 210mm;
-  --card-w: 70mm;
-  --card-h: 100mm;
   --cols: 4;
   --rows: 2;
   --gap: 0mm;
@@ -131,7 +129,7 @@
 }
 /* 打印卡片的图框可能很宽或很高，必须显式撑满，否则会按图片原比例缩在中间 */
 .paper-front .photo-frame img,
-.paper-front .photo-frame svg {
+.paper-front .photo-frame > svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -160,63 +158,89 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  /* 内容偏长时由打印预检逐张下调这个比例，而不是整页拒绝打印 */
+  font-size: calc(1em * var(--notes-scale, 1));
 }
 .paper-notes p {
   border-top: 0.2mm solid var(--print-line);
-  padding: 0.95em 0;
+  padding: 0.7em 0;
   font-size: 1.3em;
-  line-height: 1.5;
+  line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 .paper-notes b {
   display: block;
   font-size: 1em;
-  margin-bottom: 0.42em;
+  margin-bottom: 0.32em;
   font-weight: 600;
 }
 
-/* 横卡（4:3 / 16:9）：图片在左、文字在右，避免宽画幅被压成一条 */
-#print-root[data-wide="on"] .paper-card {
+/* Wide backs keep all notes in a measured two-column grid. */
+#print-root[data-wide="on"] .paper-back .paper-notes {
   display: grid;
-  grid-template-columns: 58% 1fr;
-  grid-template-rows: auto auto 1fr auto auto;
-  grid-template-areas:
-    "meta meta"
-    "photo title"
-    "photo pose"
-    "photo flip"
-    "foot foot";
-  column-gap: 0.9em;
-  row-gap: 0.35em;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+  gap: 0 1.2em;
 }
-#print-root[data-wide="on"] .paper-meta {
-  grid-area: meta;
+.paper-notes p {
+  margin: 0;
 }
-#print-root[data-wide="on"] .paper-card h2 {
-  grid-area: title;
-  margin: 0.4em 0 0;
-  align-self: start;
+.paper-card.paper-front {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: white;
 }
-#print-root[data-wide="on"] .paper-front .photo-frame {
-  grid-area: photo;
-  min-height: 100%;
+#print-root[data-frame="thin"] .paper-front {
+  border: var(--frame-width) solid white;
+  box-shadow: inset 0 0 0 0.2mm #ded8d0;
 }
-#print-root[data-wide="on"] .paper-pose {
-  grid-area: pose;
+.paper-front .photo-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
 }
-#print-root[data-wide="on"] .paper-flip {
-  grid-area: flip;
+.paper-front::after {
+  content: "";
+  position: absolute;
+  inset: 42% 0 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  pointer-events: none;
 }
-#print-root[data-wide="on"] .paper-foot {
-  grid-area: foot;
+.paper-front .paper-meta {
+  position: absolute;
+  z-index: 2;
+  inset: 1.5em 1.5em auto;
+  border: 0;
+  padding: 0;
+  text-shadow: 0 1px 3px #000;
 }
-#print-root[data-wide="on"] .paper-notes {
-  column-count: 2;
-  column-gap: 1.2em;
+.paper-front h2 {
+  position: absolute;
+  z-index: 2;
+  left: 0.85em;
+  right: 0.85em;
+  bottom: 1.3em;
+  height: auto;
+  max-height: 2.8em;
+  margin: 0;
+  color: white;
 }
-#print-root[data-wide="on"] .paper-notes p {
-  break-inside: avoid;
+.paper-front .paper-foot {
+  position: absolute;
+  z-index: 2;
+  left: 1.5em;
+  right: 1.5em;
+  bottom: 1em;
+  padding: 0;
+  border: 0;
+}
+.paper-front .image-label {
+  display: none;
 }
 
 /* 打印时叠构图网格：默认关，由 PrintView 的开关切换 */
@@ -242,12 +266,12 @@
 }
 
 .test-card {
-  padding: 5em;
+  padding: 1em;
   text-align: center;
   font-size: 2.2em;
 }
 .test-card h1 {
-  font-size: 9em;
+  font-size: 4em;
   margin: 0.2em 0;
 }
 .test-card p {

@@ -13,7 +13,7 @@ export default function AiSettings({
   remembered: boolean;
   onSave: (config: AiConfig, remember: boolean) => void;
   onClear: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }) {
   const [draft, setDraft] = useState(
     config || { baseUrl: "", apiKey: "", model: "" },
@@ -22,6 +22,13 @@ export default function AiSettings({
     [message, setMessage] = useState(""),
     [testing, setTesting] = useState(false);
   const controller = useRef<AbortController | null>(null);
+  useEffect(() => {
+    controller.current?.abort();
+    setTesting(false);
+    setDraft(config || { baseUrl: "", apiKey: "", model: "" });
+    setRemember(remembered);
+    setMessage("");
+  }, [config, remembered]);
   useEffect(() => () => controller.current?.abort(), []);
   const update = (key: keyof AiConfig, value: string) => {
     controller.current?.abort();
@@ -31,7 +38,7 @@ export default function AiSettings({
   };
   return (
     <div className="ai-settings">
-      <button onClick={onBack}>← 返回推荐</button>
+      {onBack && <button onClick={onBack}>← 返回推荐</button>}
       <h3>个人 AI 设置</h3>
       <p className="helper">
         兼容 OpenAI Chat Completions；仅支持公网 HTTPS。个人配置优先使用。
@@ -66,7 +73,7 @@ export default function AiSettings({
           checked={remember}
           onChange={(e) => setRemember(e.target.checked)}
         />
-        记住本机（密钥会保存在此浏览器）
+        记住本机（密钥会保存在此浏览器，同源脚本可读取）
       </label>
       {!validPersonalConfig(draft) && (
         <p className="helper">请填写完整的 HTTPS 基础地址、密钥和模型。</p>
@@ -101,7 +108,17 @@ export default function AiSettings({
         >
           保存设置
         </button>
-        <button onClick={onClear}>清除个人配置</button>
+        <button
+          onClick={() => {
+            controller.current?.abort();
+            setTesting(false);
+            setMessage("");
+            setDraft({ baseUrl: "", apiKey: "", model: "" });
+            onClear();
+          }}
+        >
+          清除个人配置
+        </button>
       </div>
       {testing && <p role="status">正在测试连接…</p>}
       {message && (

@@ -1,0 +1,111 @@
+import { useEffect, useState } from "react";
+import type { AiConfig } from "../lib/ai-types";
+import { createConfigStore } from "../services/ai-config";
+import { getAiAvailability } from "../services/ai";
+import Dialog from "./Dialog";
+import ThemeSwitch from "./ThemeSwitch";
+import AiSettings from "./ai/AiSettings";
+
+export default function SystemSettings({
+  store,
+  showGrid,
+  onGrid,
+  onChanged,
+  onClose,
+}: {
+  store: ReturnType<typeof createConfigStore>;
+  showGrid: boolean;
+  onGrid: (value: boolean) => void;
+  onChanged: () => void;
+  onClose: () => void;
+}) {
+  const [config, setConfig] = useState<AiConfig | null>(null);
+  const [remembered, setRemembered] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [message, setMessage] = useState("");
+  const [availability, setAvailability] = useState("正在检查系统默认 AI…");
+  useEffect(() => {
+    try {
+      setConfig(store.load());
+      setRemembered(store.isRemembered());
+      setReady(true);
+    } catch {
+      setMessage("无法读取配置，请检查浏览器存储权限后重新打开设置。");
+    }
+    const controller = new AbortController();
+    void getAiAvailability(controller.signal).then(
+      (available) =>
+        setAvailability(
+          available
+            ? "系统默认 AI 已配置"
+            : "系统默认 AI 未配置，请填写下方个人配置",
+        ),
+      () => {
+        if (!controller.signal.aborted)
+          setAvailability("无法连接本地 AI 服务，请检查服务是否启动");
+      },
+    );
+    return () => controller.abort();
+  }, [store]);
+  return (
+    <Dialog title="系统设置" onClose={onClose}>
+      <div className="dialog-content ai-panel system-settings">
+        <section>
+          <h3>显示偏好</h3>
+          <p className="helper">设置会保存在当前浏览器。</p>
+          <ThemeSwitch />
+          <label className="ai-check">
+            <input
+              type="checkbox"
+              checked={showGrid}
+              onChange={(e) => onGrid(e.target.checked)}
+            />
+            默认显示构图网格（3×3）
+          </label>
+        </section>
+        <section>
+          <h3>AI 服务</h3>
+          <p role="status">{availability}</p>
+          <p className="helper">
+            系统默认服务由本地服务环境配置；个人配置优先使用。
+          </p>
+          {ready && (
+            <AiSettings
+              config={config}
+              remembered={remembered}
+              onSave={(next, remember) => {
+                try {
+                  store.save(next, remember);
+                  setConfig(next);
+                  setRemembered(store.isRemembered());
+                  setMessage("AI 设置已保存");
+                } catch (error) {
+                  setMessage(
+                    error instanceof Error ? error.message : "保存失败",
+                  );
+                } finally {
+                  onChanged();
+                }
+              }}
+              onClear={() => {
+                try {
+                  store.clear();
+                  setConfig(null);
+                  setRemembered(false);
+                  setMessage("个人配置已清除");
+                } catch (error) {
+                  setMessage(
+                    error instanceof Error ? error.message : "清除失败",
+                  );
+                } finally {
+                  onChanged();
+                }
+              }}
+            />
+          )}
+        </section>
+        {message && <p role="status">{message}</p>}
+      </div>
+    </Dialog>
+  );
+}

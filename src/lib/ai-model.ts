@@ -27,7 +27,7 @@ export function buildCandidates(state: State, scope: AiScope): AiCandidate[] {
       title: card.title,
       category:
         state.categories.find((c) => c.id === card.categoryId)?.name || "",
-      tags: [...card.tags],
+      tags: [...new Set([...card.tags, ...(card.gender ? [card.gender] : []), ...(card.styles || [])])],
       notes: Object.fromEntries(
         fields.map((key) => [key, card.notes[key] || ""]),
       ) as Notes,
