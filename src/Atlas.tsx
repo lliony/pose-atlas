@@ -19,6 +19,7 @@ import SystemSettings from "./components/SystemSettings";
 import Photo from "./components/Photo";
 import Dialog from "./components/Dialog";
 import Editor from "./components/Editor";
+import { confirmAction, ConfirmHost } from "./components/Confirm";
 import PrintView from "./components/PrintView";
 import { CategoryDialog, AlbumDialog } from "./components/LibraryDialogs";
 import {
@@ -670,11 +671,14 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                                 <button
                                   aria-label={"删除 " + a.name}
                                   onClick={() => {
-                                    if (
-                                      confirm(
-                                        "删除这本册子？卡片会保留，公开分享同时取消。",
-                                      )
-                                    )
+                                    void confirmAction({
+                                      title: "删除卡片册",
+                                      message: `删除「${a.name}」？`,
+                                      detail: "卡片会保留，公开分享同时取消。",
+                                      confirmText: "删除",
+                                      danger: true,
+                                    }).then((ok) => {
+                                      if (!ok) return;
                                       void act(async () => {
                                         if (a.shareId)
                                           await api(
@@ -688,6 +692,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                                           ),
                                         });
                                       });
+                                    });
                                   }}
                                 >
                                   删除
@@ -739,11 +744,14 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                           <button
                             className="danger-link"
                             onClick={() => {
-                              if (
-                                confirm(
-                                  "永久删除这张卡片？已有公开副本需另行更新或取消。",
-                                )
-                              )
+                              void confirmAction({
+                                title: "永久删除卡片",
+                                message: `永久删除「${c.title}」？`,
+                                detail: "删除后无法恢复；已有公开副本需另行更新或取消。",
+                                confirmText: "永久删除",
+                                danger: true,
+                              }).then((ok) => {
+                                if (!ok) return;
                                 void act(() =>
                                   save({
                                     ...state,
@@ -758,6 +766,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                                     })),
                                   }),
                                 );
+                              });
                             }}
                           >
                             永久删除
@@ -889,6 +898,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
           }}
         />
       )}
+      <ConfirmHost />
       {printCards && (
         <PrintView
           appearance={appearance}

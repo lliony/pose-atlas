@@ -5,6 +5,7 @@ import type { createConfigStore } from "../services/ai-config";
 import { useEffect, useRef, useState } from "react";
 import Dialog from "./Dialog";
 import Photo from "./Photo";
+import { confirmAction } from "./Confirm";
 import { GENDERS, STYLES } from '../lib/card-appearance';
 import {
   RATIO_KEYS,
@@ -202,8 +203,18 @@ export default function Editor({
     setValue((v) => ({ ...v, ...patch }));
   };
   const close = () => {
-    if (!dirty.current || confirm("修改已保留为本机草稿，确定关闭编辑吗？"))
+    if (!dirty.current) {
       onClose();
+      return;
+    }
+    void confirmAction({
+      title: "关闭编辑",
+      message: "还有未保存的修改，确定关闭吗？",
+      detail: "修改已保留为本机草稿，下次打开同一张卡片会提示恢复。",
+      confirmText: "关闭",
+    }).then((ok) => {
+      if (ok) onClose();
+    });
   };
   const note = (key: string, text: string) => {
     if (mode === "default") update({ notes: { ...value.notes, [key]: text } });

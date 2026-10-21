@@ -4,6 +4,7 @@ import type { AiProfile } from "../../services/ai-config";
 import { createConfigStore } from "../../services/ai-config";
 import { validPersonalConfig } from "../../lib/ai-ui";
 import { testAiConfig } from "../../services/ai";
+import { confirmAction } from "../Confirm";
 
 const blank = (): AiProfile => ({
   id: "",
@@ -64,16 +65,24 @@ export default function AiSettings({
   };
 
   const remove = (profile: AiProfile) => {
-    if (!confirm(`删除模型「${profile.name || profile.model}」？`)) return;
-    try {
-      store.removeProfile(profile.id);
-      if (draft.id === profile.id) setDraft(blank());
-      setMessage("已删除");
-      refresh();
-      onChanged();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "删除失败");
-    }
+    void confirmAction({
+      title: "删除模型",
+      message: `删除「${profile.name || profile.model}」？`,
+      detail: "只影响这台浏览器里的档案，不会影响其他设备。",
+      confirmText: "删除",
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      try {
+        store.removeProfile(profile.id);
+        if (draft.id === profile.id) setDraft(blank());
+        setMessage("已删除");
+        refresh();
+        onChanged();
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "删除失败");
+      }
+    });
   };
 
   const setUse = (feature: "recommend" | "draft", id: string) => {

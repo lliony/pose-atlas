@@ -147,3 +147,22 @@
   flex: 1 1 220px;
   margin: 0;
 }
+/* 应用内确认框 */
+.confirm-body p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.confirm-body .helper {
+  margin: 0;
+}
+.dialog-footer .danger-btn {
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: transparent;
+  padding: 10px 18px;
+}
+.dialog-footer .danger-btn:hover {
+  background: var(--danger);
+  color: var(--color-paper);
+}
