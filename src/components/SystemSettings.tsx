@@ -21,6 +21,7 @@ export default function SystemSettings({
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState("");
   const [availability, setAvailability] = useState("正在检查系统默认 AI…");
+  const [hasDefault, setHasDefault] = useState(false);
   useEffect(() => {
     try {
       setReady(true);
@@ -29,12 +30,14 @@ export default function SystemSettings({
     }
     const controller = new AbortController();
     void getAiAvailability(controller.signal).then(
-      (available) =>
+      (available) => {
+        setHasDefault(available);
         setAvailability(
           available
             ? "系统默认 AI 已配置"
             : "系统默认 AI 未配置，请填写下方个人配置",
-        ),
+        );
+      },
       () => {
         if (!controller.signal.aborted)
           setAvailability("无法连接本地 AI 服务，请检查服务是否启动");
@@ -67,6 +70,7 @@ export default function SystemSettings({
           {ready && (
             <AiSettings
               store={store}
+              systemDefault={hasDefault}
               onChanged={() => {
                 setMessage("AI 设置已更新");
                 onChanged();

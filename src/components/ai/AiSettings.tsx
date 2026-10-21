@@ -17,10 +17,13 @@ export default function AiSettings({
   store,
   onChanged,
   onBack,
+  systemDefault = false,
 }: {
   store: ReturnType<typeof createConfigStore>;
   onChanged: () => void;
   onBack?: () => void;
+  /** 系统已配置默认模型时，下面的档案只是可选的覆盖 */
+  systemDefault?: boolean;
 }) {
   const [profiles, setProfiles] = useState<AiProfile[]>([]);
   const [draft, setDraft] = useState<AiProfile>(blank),
@@ -91,7 +94,9 @@ export default function AiSettings({
       {onBack && <button onClick={onBack}>← 返回推荐</button>}
       <h3>模型档案</h3>
       <p className="helper">
-        可以保存多个模型（不同服务商或不同大小的模型）。推荐与填充可以各用一个。
+        {systemDefault
+          ? "系统已配置默认模型，直接可用；下面的档案只在你想换用别的模型时才需要。"
+          : "系统默认模型未配置。你可以在这里添加自己的模型（不同服务商或不同大小的模型）。"}
       </p>
       {profiles.length > 0 && (
         <ul className="profile-list">
