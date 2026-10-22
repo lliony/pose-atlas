@@ -199,3 +199,37 @@
     width: 100%;
   }
 }
+/* 备份面板 */
+.backup-panel h4 {
+  margin: 16px 0 6px;
+  font-size: 11px;
+  letter-spacing: .4px;
+  color: var(--muted);
+}
+.backup-panel .backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.backup-panel .backup-actions button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-size: 11px;
+}
+.backup-panel .backup-actions button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.backup-panel .backup-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 6px 0 2px;
+}
+.backup-panel input[type="text"],
+.backup-panel label > input:not([type]) {
+  font-family: var(--mono, monospace);
+  letter-spacing: .5px;
+}

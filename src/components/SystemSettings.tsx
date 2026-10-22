@@ -4,6 +4,7 @@ import { getAiAvailability } from "../services/ai";
 import Dialog from "./Dialog";
 import ThemeSwitch from "./ThemeSwitch";
 import AiSettings from "./ai/AiSettings";
+import BackupPanel from "./BackupPanel";
 
 export default function SystemSettings({
   store,
@@ -60,6 +61,11 @@ export default function SystemSettings({
             />
             默认显示构图网格（3×3）
           </label>
+        </section>
+        <section>
+          <h3>备份与恢复</h3>
+          <p className="helper">数据只存在这台浏览器里，换设备或清缓存前先备份。</p>
+          <BackupPanel />
         </section>
         <section>
           <h3>AI 服务</h3>

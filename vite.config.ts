@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
   const target = env.API_PROXY_TARGET;
   const proxy = {
     '/api/ai': { target: env.AI_PROXY_TARGET || 'http://127.0.0.1:5175', changeOrigin: false },
+    '/api/backup': { target: env.AI_PROXY_TARGET || 'http://127.0.0.1:5175', changeOrigin: false },
     ...(target ? Object.fromEntries(
       ['/api', '/signin-with-chatgpt', '/callback', '/signout-with-chatgpt'].map(path => [path, { target, changeOrigin: false }]),
     ) : {}),

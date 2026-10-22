@@ -43,3 +43,23 @@ export async function write(
     t.onabort = () => reject(new Error("保存已中断，请重试"));
   });
 }
+
+export async function clear(store: string): Promise<void> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(store, "readwrite");
+    t.objectStore(store).clear();
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(new Error("清空失败：浏览器存储可能已满"));
+    t.onabort = () => reject(new Error("清空已中断，请重试"));
+  });
+}
+
+export async function keys(store: string): Promise<string[]> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction(store).objectStore(store).getAllKeys();
+    r.onsuccess = () => resolve(r.result as string[]);
+    r.onerror = () => reject(r.error);
+  });
+}
