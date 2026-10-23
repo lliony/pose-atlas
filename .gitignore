@@ -9,4 +9,3 @@ dist/
 .playwright-cli/
 .superpowers/
 output/
-data/

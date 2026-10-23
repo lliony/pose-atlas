@@ -1,24 +1,17 @@
 import { api, type Workspace } from "./api";
 import { clear, keys, read, write } from "./storage";
+import { stateSources } from "../lib/image-refs";
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   backupFileName,
   backupStats,
   mergeStates,
-  parseBackup,
   type BackupFile,
   type BackupStats,
 } from "../lib/backup";
-import { newBackupCode, openBackup, sealBackup } from "../lib/backup-crypto";
-
-export type CloudBackupInfo = {
-  cards: number;
-  images: number;
-  bytes: number;
-  exportedAt: string;
-  updatedAt: string;
-};
+import { packBackup, unpackBackup } from "../lib/backup-package";
+import { sanitizeState } from "../lib/export-sanitize";
 
 const blobToDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -40,7 +33,10 @@ export async function collectBackup(
   const workspace = await api<Workspace>("workspace", "GET");
   const images: Record<string, string> = {};
   if (includeImages) {
+    // 只导出卡片真正引用的图片；本机库里可能留着已经删除卡片的旧图。
+    const needed = stateSources(workspace.state);
     for (const src of await keys("images")) {
+      if (!needed.has(src)) continue;
       const blob = await read<Blob>("images", src);
       if (blob) images[src] = await blobToDataUrl(blob);
     }
@@ -49,24 +45,9 @@ export async function collectBackup(
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
-    state: workspace.state,
+    state: sanitizeState(workspace.state),
     images,
   };
-}
-
-export function backupJson(backup: BackupFile): string {
-  return JSON.stringify(backup);
-}
-
-export function downloadBackup(backup: BackupFile): string {
-  const blob = new Blob([backupJson(backup)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = backupFileName();
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return link.download;
 }
 
 /** 恢复备份；replace 覆盖本机数据，merge 按 id 合并（备份里的条目优先）。 */
@@ -88,89 +69,21 @@ export async function restoreBackup(
   return backupStats(backup);
 }
 
-/* ── 云端备份：客户端加密，服务端只存密文 ─────────────── */
-
-const backupUrl = (code: string) =>
-  `/api/backup/${encodeURIComponent(code.trim())}`;
-
-async function readJson(response: Response): Promise<any> {
-  const body = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(
-      (body && typeof body.error === "string" && body.error) ||
-        `云端备份请求失败（HTTP ${response.status}）`,
-    );
-  return body;
+/** 导出 ZIP：pose-atlas.json 记录数据，images/ 下是原始图片。 */
+export async function downloadBackupZip(backup: BackupFile): Promise<string> {
+  const zip = await packBackup(backup);
+  const url = URL.createObjectURL(zip);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = backupFileName(new Date(), "zip");
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return link.download;
 }
 
-export async function uploadCloudBackup(
-  code: string,
-  backup: BackupFile,
-): Promise<CloudBackupInfo> {
-  const sealed = await sealBackup(code, JSON.stringify(backup));
-  const response = await fetch(backupUrl(code), {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      payload: sealed,
-      meta: {
-        cards: backup.state.cards.length,
-        images: Object.keys(backup.images).length,
-        exportedAt: backup.exportedAt,
-      },
-    }),
-  });
-  const body = await readJson(response);
-  return body.info as CloudBackupInfo;
-}
-
-export async function cloudBackupInfo(
-  code: string,
-): Promise<CloudBackupInfo | null> {
-  const response = await fetch(backupUrl(code));
-  if (response.status === 404) return null;
-  const body = await readJson(response);
-  return body.info as CloudBackupInfo;
-}
-
-export async function downloadCloudBackup(code: string): Promise<BackupFile> {
-  const response = await fetch(backupUrl(code));
-  if (response.status === 404)
-    throw new Error("云端没有这个备份码对应的备份");
-  const body = await readJson(response);
-  const json = await openBackup(code, body.payload);
-  return parseBackup(json);
-}
-
-export async function deleteCloudBackup(code: string): Promise<void> {
-  const response = await fetch(backupUrl(code), { method: "DELETE" });
-  if (response.status === 404) throw new Error("云端没有这个备份码对应的备份");
-  await readJson(response);
-}
-
-const CODE_KEY = "pose-atlas:backup-code";
-
-export function readBackupCode(): string {
-  try {
-    return localStorage.getItem(CODE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-export function saveBackupCode(code: string): void {
-  try {
-    if (code) localStorage.setItem(CODE_KEY, code);
-    else localStorage.removeItem(CODE_KEY);
-  } catch {
-    /* 记不住也不影响使用 */
-  }
-}
-
-export function ensureBackupCode(): string {
-  const existing = readBackupCode();
-  if (existing) return existing;
-  const code = newBackupCode();
-  saveBackupCode(code);
-  return code;
+/** 读备份文件：ZIP 包，或早期版本的单个 JSON。 */
+export function readBackupFile(file: File): Promise<BackupFile> {
+  return file
+    .arrayBuffer()
+    .then((buffer) => unpackBackup(new Uint8Array(buffer)));
 }

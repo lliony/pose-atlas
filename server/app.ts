@@ -4,9 +4,8 @@ import { AI_LIMITS } from '../src/lib/ai-types.ts';
 import type { draft, recommend, testConnection } from './ai/provider.ts';
 import { AiError } from './ai/errors.ts';
 import { validateDraftRequest, validatePersonalConfig, validateRequest } from './ai/validation.ts';
-import { handleBackup, type BackupStore } from './backup.ts';
 
-type Options = { defaultConfig?: AiConfig; allowedOrigins: string[]; recommend: typeof recommend; draft?: typeof draft; testConnection: typeof testConnection; backup?: BackupStore };
+type Options = { defaultConfig?: AiConfig; allowedOrigins: string[]; recommend: typeof recommend; draft?: typeof draft; testConnection: typeof testConnection };
 function send(res: http.ServerResponse, status: number, body: unknown) {
   if (res.destroyed || res.writableEnded) return;
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -41,11 +40,6 @@ export function createAiServer(options: Options): http.Server {
     const hosts = new Set([...proxyHosts, `127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`]);
     if (!req.headers.host || !hosts.has(req.headers.host) || (req.headers.origin !== undefined && !origins.has(req.headers.origin))) {
       send(res, 403, { error: '请求来源不允许', code: 'FORBIDDEN' }); return;
-    }
-    const backupMatch = /^\/api\/backup\/([A-Za-z0-9_-]{16,64})$/.exec(req.url ?? '');
-    if (backupMatch && options.backup) {
-      await handleBackup(req, res, backupMatch[1], options.backup);
-      return;
     }
     if (req.method === 'GET' && req.url === '/api/ai/config') { send(res, 200, { defaultAvailable: !!defaultConfig }); return; }
     if (req.url !== '/api/ai/test' && req.url !== '/api/ai/recommend' && req.url !== '/api/ai/draft') { send(res, 404, { error: '接口不存在', code: 'NOT_FOUND' }); return; }

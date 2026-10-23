@@ -1,5 +1,4 @@
 import { createAiServer } from './app.ts';
-import { createBackupStore } from './backup.ts';
 import { draft, recommend, testConnection } from './ai/provider.ts';
 
 const { AI_BASE_URL, AI_API_KEY, AI_MODEL } = process.env;
@@ -13,9 +12,7 @@ const origins = (process.env.AI_ALLOWED_ORIGINS ?? 'http://127.0.0.1:5174,http:/
   .map((value) => value.trim())
   .filter(Boolean);
 
-const backupDir = process.env.BACKUP_DIR?.trim() || './data/backups';
 const server = createAiServer({
-  backup: createBackupStore(backupDir),
   defaultConfig,
   allowedOrigins: origins.length ? origins : ['http://127.0.0.1:5174'],
   recommend,
