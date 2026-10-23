@@ -156,6 +156,21 @@
 .confirm-body .helper {
   margin: 0;
 }
+.confirm-body .confirm-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.confirm-body .confirm-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--color-accent);
+}
 .dialog-footer .danger-btn {
   border: 1px solid var(--danger);
   color: var(--danger);

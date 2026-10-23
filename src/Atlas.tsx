@@ -14,12 +14,13 @@ import {
   type Publication,
 } from "./lib/types";
 import { resolveNotes } from "./lib/model";
+import { sanitizePublication, sanitizeState } from "./lib/export-sanitize";
 import PoseCard from "./components/PoseCard";
 import SystemSettings from "./components/SystemSettings";
 import Photo from "./components/Photo";
 import Dialog from "./components/Dialog";
 import Editor from "./components/Editor";
-import { confirmAction, ConfirmHost } from "./components/Confirm";
+import { confirmAction, confirmChoice, ConfirmHost } from "./components/Confirm";
 import PrintView from "./components/PrintView";
 import { CategoryDialog, AlbumDialog } from "./components/LibraryDialogs";
 import {
@@ -30,6 +31,7 @@ import {
   type ShareResponse,
   type PublishResponse,
 } from "./services/api";
+import { pruneForState } from "./services/image-store";
 export default function Atlas({ shareId }: { shareId?: string }) {
   const [state, setState] = useState<State>(seed as State),
     [revision, setRevision] = useState(0),
@@ -176,6 +178,8 @@ export default function Atlas({ shareId }: { shareId?: string }) {
       setRevision(r.revision);
       setToast("已保存");
       setError("");
+      // 删除卡片/图片后，顺手清掉不再被任何卡片、草稿或快照引用的图片。
+      if (isLocalMode) void pruneForState(next).catch(() => {});
     } catch (e: any) {
       setError(e.message);
       throw e;
@@ -248,17 +252,24 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         location.href = login;
         return;
       }
+      if (shareId && !publication) {
+        setError("公开版本还没加载完，请稍后再试");
+        return;
+      }
       if (shareId) await api("shares/" + shareId + "/export");
-      const blob = new Blob(
-        [JSON.stringify(shareId ? publication : state, null, 2)],
-        { type: "application/json" },
-      );
+      // 只导出白名单字段：密钥、登录信息、分享凭据等都不进入文件。
+      const payload = shareId
+        ? sanitizePublication(publication as Publication)
+        : sanitizeState(state);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "pose-atlas-notes.json";
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      setToast("已下载文字资料（图片请通过打印保存PDF）");
+      setToast("已下载文字资料（不含密钥与分享链接；图片请通过打印保存PDF）");
     } catch (e: any) {
       setError(e.message);
     }
@@ -685,13 +696,17 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                                 <button
                                   aria-label={"删除 " + a.name}
                                   onClick={() => {
-                                    void confirmAction({
+                                    void confirmChoice({
                                       title: "删除卡片册",
                                       message: `删除「${a.name}」？`,
-                                      detail: "卡片会保留，公开分享同时取消。",
+                                      detail:
+                                        "不勾选只删卡片册，卡片保留；勾选后册内卡片会一起永久删除，对应图片也会清理。公开分享同时取消。",
                                       confirmText: "删除",
                                       danger: true,
-                                    }).then((ok) => {
+                                      checkbox: {
+                                        label: "同时删除册内卡片和图片",
+                                      },
+                                    }).then(({ ok, checked }) => {
                                       if (!ok) return;
                                       void act(async () => {
                                         if (a.shareId)
@@ -699,11 +714,28 @@ export default function Atlas({ shareId }: { shareId?: string }) {
                                             "shares/" + a.shareId,
                                             "DELETE",
                                           );
+                                        const removing = new Set(
+                                          checked ? a.cardIds : [],
+                                        );
                                         await save({
                                           ...state,
-                                          albums: state.albums.filter(
-                                            (x) => x.id !== a.id,
-                                          ),
+                                          cards: checked
+                                            ? state.cards.filter(
+                                                (c) => !removing.has(c.id),
+                                              )
+                                            : state.cards,
+                                          albums: state.albums
+                                            .filter((x) => x.id !== a.id)
+                                            .map((x) =>
+                                              removing.size
+                                                ? {
+                                                    ...x,
+                                                    cardIds: x.cardIds.filter(
+                                                      (id) => !removing.has(id),
+                                                    ),
+                                                  }
+                                                : x,
+                                            ),
                                         });
                                       });
                                     });

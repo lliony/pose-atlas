@@ -1,3 +1,9 @@
+import {
+  IMAGE_MAX_EDGE,
+  IMAGE_QUALITY,
+  fitWithin,
+} from "./image-compression.ts";
+
 export const RATIO_KEYS = [
   "1:1",
   "2:3",
@@ -78,10 +84,11 @@ export async function measureFile(file: File): Promise<PhotoSize | null> {
   }
 }
 
-/** 居中裁切到目标比例，返回文件与最终尺寸。 */
+/** 居中裁切到目标比例，返回文件与最终尺寸；默认同时把长边压到上限。 */
 export async function cropToRatio(
   url: string,
   target: RatioKey,
+  maxEdge: number | null = IMAGE_MAX_EDGE,
 ): Promise<{ file: File; size: PhotoSize } | null> {
   const img = await new Promise<HTMLImageElement | null>((resolve) => {
     const el = new Image();
@@ -96,9 +103,11 @@ export async function cropToRatio(
   let sh = img.naturalHeight;
   if (sw / sh > aspect) sw = Math.round(sh * aspect);
   else sh = Math.round(sw / aspect);
+  const scaled =
+    maxEdge === null ? { width: sw, height: sh } : fitWithin(sw, sh, maxEdge);
   const canvas = document.createElement("canvas");
-  canvas.width = sw;
-  canvas.height = sh;
+  canvas.width = scaled.width;
+  canvas.height = scaled.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.drawImage(
@@ -109,15 +118,15 @@ export async function cropToRatio(
     sh,
     0,
     0,
-    sw,
-    sh,
+    scaled.width,
+    scaled.height,
   );
   const blob = await new Promise<Blob | null>((res) =>
-    canvas.toBlob(res, "image/jpeg", 0.92),
+    canvas.toBlob(res, "image/jpeg", IMAGE_QUALITY),
   );
   if (!blob) return null;
   return {
     file: new File([blob], "crop.jpg", { type: "image/jpeg" }),
-    size: { w: sw, h: sh },
+    size: { w: scaled.width, h: scaled.height },
   };
 }

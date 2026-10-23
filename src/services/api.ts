@@ -1,5 +1,8 @@
 import seed from "../lib/seed.json";
 import { addReferenceCards } from '../lib/reference-cards';
+import { prepareUpload } from "../lib/image-compression";
+import { loadImageSettings } from "../lib/image-settings";
+import { noteFreshImage } from "./image-store";
 import { snapshot, validateState } from "../lib/model";
 import type { State, Publication } from "../lib/types";
 import { database, read, write } from "./storage";
@@ -203,14 +206,13 @@ export async function uploadImage(
     file.size > 20 * 1024 * 1024
   )
     throw error("请选择20MB以内的JPEG、PNG或WebP图片");
-  // Reject corrupt files before persisting a broken reference.
-  const bitmap = await createImageBitmap(file).catch(() => {
-    throw error("无法读取图片，请重新选择有效文件");
+  // 解码一次挡掉损坏文件，并按需压到长边上限再落盘（保留原图时原样保存）。
+  const prepared = await prepareUpload(file, {
+    keepOriginal: loadImageSettings().keepOriginal,
   });
-  bitmap.close();
   if (!isLocalMode) {
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", prepared);
     const r = await fetch("/api/images", { method: "POST", body: form });
     const data = await r
       .json()
@@ -220,7 +222,8 @@ export async function uploadImage(
   }
   const id = crypto.randomUUID(),
     src = "/api/media/" + id;
-  await write("images", src, file);
-  assets.set(src, URL.createObjectURL(file));
+  await write("images", src, prepared);
+  assets.set(src, URL.createObjectURL(prepared));
+  noteFreshImage(src);
   return { id, src };
 }

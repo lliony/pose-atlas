@@ -63,3 +63,23 @@ export async function keys(store: string): Promise<string[]> {
     r.onerror = () => reject(r.error);
   });
 }
+
+export async function entries<T>(store: string): Promise<T[]> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction(store).objectStore(store).getAll();
+    r.onsuccess = () => resolve(r.result as T[]);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+export async function remove(store: string, key: string): Promise<void> {
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(store, "readwrite");
+    t.objectStore(store).delete(key);
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(new Error("删除失败：浏览器存储不可用"));
+    t.onabort = () => reject(new Error("删除已中断，请重试"));
+  });
+}

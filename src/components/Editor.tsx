@@ -15,6 +15,8 @@ import {
   sizeOfPhoto,
   type RatioKey,
 } from '../lib/image-ratio';
+import { IMAGE_MAX_EDGE } from '../lib/image-compression';
+import { loadImageSettings } from '../lib/image-settings';
 import {
   labels,
   uid,
@@ -82,7 +84,11 @@ export default function Editor({
     setError("");
     try {
       const url = await resolveImageUrl(photo.src);
-      const cropped = await cropToRatio(url, cropTarget);
+      const cropped = await cropToRatio(
+        url,
+        cropTarget,
+        loadImageSettings().keepOriginal ? null : IMAGE_MAX_EDGE,
+      );
       if (!cropped) throw Error("裁切失败，请换一张图重试");
       const data = await uploadImage(cropped.file);
       update({
