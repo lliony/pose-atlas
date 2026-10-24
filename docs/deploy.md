@@ -82,22 +82,7 @@ AI_MODEL=视觉模型名
 
 ### Cloudflare Workers + Render（免费）
 
-仓库已带两份配置，无需改代码：
-
-- `wrangler.jsonc`：静态资产托管 `./dist`，`not_found_handling: single-page-application` 提供 SPA 回退；`run_worker_first: ["/api/ai/*"]` 让 AI 请求先进 Worker
-- `worker/index.ts`：把 `/api/ai/*` 反代到 Render，Origin 改写为上游 origin
-- `render.yaml`：Render Blueprint，免费 Web Service 跑 `server/index.ts`
-
-> 不要再加 `public/_redirects`：SPA 回退已由 Workers 内置处理，叠加 `/* /index.html 200` 会被判无限循环（code 100324）拒绝部署。
-
-部署顺序（先 Render 后 Cloudflare，拿到地址再填变量）：
-
-1. **Render**：New → Blueprint → 选本仓库，按 `render.yaml` 创建 `pose-atlas-ai`。若改名，同步改 `AI_ALLOWED_ORIGINS` 与服务域名一致。
-2. **Cloudflare**：Workers & Pages → Create → Import repository 选本仓库；检测到 `wrangler.jsonc` 后按它部署，构建命令 `npm run build`。部署成功后在 Settings → Variables and Secrets 加：
-   - `AI_UPSTREAM=https://pose-atlas-ai.onrender.com`（Render 实际地址）
-3. 验证：`curl https://你的域名/api/ai/config` 应返回 `{"defaultAvailable":false}`；页面「系统设置」填入个人模型配置后可用。
-
-密钥策略：Render 不配 `AI_API_KEY`，系统默认模型关闭，访客在浏览器自填 key（仅存各自 localStorage），公网没有可盗用的额度。
+完整步骤见 [参考部署：Cloudflare Workers + Render](deploy-cloudflare-workers.md)——仓库已带 `wrangler.jsonc`、`worker/index.ts`、`render.yaml`，零代码改动即可上线，密钥由访客自填。
 
 ### Nginx（静态 + AI 反代）
 
