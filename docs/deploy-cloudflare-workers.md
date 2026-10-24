@@ -54,6 +54,7 @@ curl https://<你的-worker-域名>/api/ai/config
 
 ## 常见坑
 
+- **AI 服务提示「未配置（缺少 AI_UPSTREAM）」（503）**：页面和 Worker 都正常，只是 Worker 的环境变量没配或配错了名字。到 Cloudflare 控制台 → Workers & Pages → 该 Worker → Settings → Variables and Secrets，添加文本变量 `AI_UPSTREAM=https://<render-地址>`（不带末尾斜杠），保存即生效，无需重新部署。配好后用第三步的 curl 验证。
 - **`Invalid _redirects configuration ... code: 100324`**：画蛇添足加了 `public/_redirects`。Workers 的 `single-page-application` 已内置 SPA 回退，叠加 `/* /index.html 200` 会被判无限循环。本仓库**刻意不带** `_redirects`。
 - **`functions/` 目录不生效**：那是 Pages 专属约定，Workers 部署走 `wrangler.jsonc` 的 `main` 入口（`worker/index.ts`）。
 - **AI 首次请求等 30–60 秒**：Render 免费档闲置 15 分钟休眠，冷启动期间 Worker 一起等待，之后的请求恢复正常。
