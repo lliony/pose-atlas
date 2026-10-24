@@ -10,3 +10,4 @@ dist/
 .superpowers/
 .wrangler/
 output/
+.DS_Store
