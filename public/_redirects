@@ -1,0 +1,2 @@
+# /api/ai/* 由 functions/ 接管（Functions 优先于本规则）；其余路径回退 SPA
+/*    /index.html   200
