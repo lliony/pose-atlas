@@ -31,6 +31,28 @@ export function sizeOfPhoto(
   return sizes.get(photo.src) ?? null;
 }
 
+/**
+ * 需要真正去浏览器测量原始尺寸的图片地址：既没有记录过 width/height、又不是可分栏
+ * 固定尺寸的 sprite 参考图。上传时会记录 width/height，所以正常情况下这里只衡量那些
+ * 早期的种子/旧数据图片——返回的集合不会随每次保存而变化。
+ * 结果去重并按 src 排序，便于作为 effect 依赖做稳定性比较。
+ */
+export function srcsNeedingMeasurement(
+  cards: { images: { src: string; panel?: number | null; width?: number; height?: number }[] }[],
+): string[] {
+  const set = new Set<string>();
+  for (const card of cards)
+    for (const photo of card.images)
+      if (
+        !(photo.width && photo.height) &&
+        (photo.panel === undefined || photo.panel === null) &&
+        set.add(photo.src)
+      ) {
+        /* dedupe via set.add 返回值 */
+      }
+  return [...set].sort();
+}
+
 /** 原图宽高比落到最近的常用比例；偏差超过 5% 视为「其他比例」。 */
 export function ratioKey(w: number, h: number): RatioKey | null {
   if (!w || !h) return null;

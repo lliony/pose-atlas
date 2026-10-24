@@ -4,17 +4,17 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import Dialog from "./Dialog";
 import Photo from "./Photo";
-import { printSheets, resolveNotes } from "../lib/model";
+import { resolveNotes } from "../lib/model";
 import {
   PAPERS,
   backIndex,
   layoutForAspect,
-  layoutForCount,
   type Orientation,
   type PaperId,
   type PrintLayout,
 } from "../lib/print";
-import { sizeOfPhoto, type PhotoSize } from "../lib/image-ratio";
+import type { PhotoSize } from "../lib/image-ratio";
+import { planPrintGroups } from "../lib/print-group";
 import {
   labels,
   type Card,
@@ -22,9 +22,6 @@ import {
   type Notes,
 } from "../lib/types";
 type Item = { card: Card; photo: Picture; notes: Notes };
-
-const gcd = (a: number, b: number): number =>
-  b === 0 ? a : gcd(b, a % b);
 
 type Settings = {
   paper: PaperId;
@@ -104,76 +101,43 @@ export default function PrintView({
     }
   }, [settings]);
 
-  const list = items.filter((i) => chosen.has(i.photo.id)),
-    tooLong = list.some(
-      (i) =>
-        Object.values(i.notes).some((t) => t.length > 80) ||
-        i.card.title.length > 28,
-    );
+  const list = useMemo(
+    () => items.filter((i) => chosen.has(i.photo.id)),
+    [items, chosen],
+  );
+  const tooLong = useMemo(
+    () =>
+      list.some(
+        (i) =>
+          Object.values(i.notes).some((t) => t.length > 80) ||
+          i.card.title.length > 28,
+      ),
+    [list],
+  );
 
-  // 相同比例的图片排在一起：每种比例单独算版面、单独起一张纸
-  const groups = (() => {
-    const buckets = new Map<
-      string,
-      { label: string; aspect: { w: number; h: number }; items: Item[] }
-    >();
-    for (const item of list) {
-      const size = sizeOfPhoto(item.photo, sizes ?? new Map()) ?? {
-        w: 3,
-        h: 4,
-      };
-      const g = gcd(size.w, size.h) || 1;
-      const aspect = { w: size.w / g, h: size.h / g };
-      const key = `${aspect.w}:${aspect.h}`;
-      const bucket = buckets.get(key);
-      if (bucket) bucket.items.push(item);
-      else
-        buckets.set(key, {
-          label: `${aspect.w}:${aspect.h}`,
-          aspect,
-          items: [item],
-        });
-    }
-    return [...buckets.values()]
-      .map((bucket) => {
-        const groupLayout = layoutForAspect({
-          paper: settings.paper,
-          orientation: settings.orientation,
-          aspect: bucket.aspect,
-        });
-        // 每张纸单独排版：最后一页卡片少时换更紧凑的版面，避免卡片被拉得很散
-        const sheetsOfGroup: {
-          layout: PrintLayout;
-          front: (Item | null)[];
-          back: (Item | null)[];
-        }[] = [];
-        for (let start = 0; start < bucket.items.length; start += groupLayout.perSheet) {
-          const chunk = bucket.items.slice(start, start + groupLayout.perSheet);
-          const chunkLayout =
-            chunk.length === groupLayout.perSheet
-              ? groupLayout
-              : layoutForCount({
-                  paper: settings.paper,
-                  orientation: settings.orientation,
-                  aspect: bucket.aspect,
-                  count: chunk.length,
-                });
-          const [front, back] = printSheets(
-            chunk,
-            settings.edge,
-            chunkLayout.cols,
-            chunkLayout.rows,
-          );
-          sheetsOfGroup.push({ layout: chunkLayout, front, back });
-        }
-        return {
-          ...bucket,
-          layout: groupLayout,
-          sheets: sheetsOfGroup,
-        };
-      })
-      .sort((a, b) => b.items.length - a.items.length);
-  })();
+  // 数据同源：槽位存照片 id，渲染时再换回当前 items（含最新笔记），
+  // 这样版式可以独立于文案做记忆化。
+  const liveById = useMemo(
+    () => new Map(items.map((i) => [i.photo.id, i])),
+    [items],
+  );
+
+  // 版式只依赖「选中的图 + 各自比例 + 纸张设置」，与笔记文案无关。
+  // items 的照片集合/顺序在本次打印会话中固定（编辑的只是 notes），故不列入依赖，
+  // 保证打字时整个打印预览（含多张 eager 图卡）不被反复重排、重建。
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const groups = useMemo(() => {
+    const chosenItems = items.filter((i) => chosen.has(i.photo.id));
+    return planPrintGroups(
+      chosenItems.map((i) => ({ key: i.photo.id, photo: i.photo })),
+      {
+        paper: settings.paper,
+        orientation: settings.orientation,
+        edge: settings.edge,
+        sizes,
+      },
+    );
+  }, [chosen, settings.paper, settings.orientation, settings.edge, sizes]);
 
   const layout: PrintLayout =
     groups[0]?.layout ??
@@ -408,7 +372,7 @@ export default function PrintView({
                     const size = same
                       ? `${first.cols}×${first.rows}，卡片 ${Number(first.cardW.toFixed(1))}×${Number(first.cardH.toFixed(1))}mm`
                       : `${g.sheets.length} 种版面`;
-                    return `${g.label} · ${g.items.length} 张（${size}，${g.sheets.length} 张纸）`;
+                    return `${g.label} · ${g.count} 张（${size}，${g.sheets.length} 张纸）`;
                   })
                   .join("；")}
                 <br />
@@ -638,8 +602,10 @@ export default function PrintView({
                       }
                       style={cs}
                     >
-                      {page.map((item, j) =>
-                        item ? (
+                      {page.map((id, j) => {
+                        if (!id) return <div className="paper-empty" key={j} />;
+                        const item = liveById.get(id)!;
+                        return (
                           <article
                             data-photo={item.photo.id}
                             className={
@@ -682,10 +648,8 @@ export default function PrintView({
                               </span>
                             </div>
                           </article>
-                        ) : (
-                          <div className="paper-empty" key={j} />
-                        ),
-                      )}
+                        );
+                      })}
                     </section>
                   );
                 }),

@@ -103,3 +103,40 @@ test("图片解码失败时返回 null", async () => {
     browser.restore();
   }
 });
+
+import { srcsNeedingMeasurement } from "../src/lib/image-ratio.ts";
+import type { Card } from "../src/lib/types.ts";
+
+const cards = (list: unknown[]): Card[] => list as Card[];
+
+test("只挑选缺失尺寸且非分栏的图去测量，已记录尺寸与 sprite 分栏跳过", () => {
+  const result = srcsNeedingMeasurement(
+    cards([
+      { images: [{ src: "/api/media/known", width: 800, height: 1200 }, { src: "/api/media/unknown" }] },
+      {
+        images: [
+          { src: "/api/media/sprite", panel: 2, width: undefined, height: undefined },
+          { src: "/api/media/zero-w", width: 0, height: 1200 },
+          { src: "/api/media/missing", width: undefined, height: undefined },
+        ],
+      },
+    ]),
+  );
+  assert.deepEqual(result, [
+    "/api/media/missing",
+    "/api/media/unknown",
+    "/api/media/zero-w",
+  ]);
+});
+
+test("去重排序，全已知时返回空数组", () => {
+  assert.deepEqual(
+    srcsNeedingMeasurement(
+      cards([
+        { images: [{ src: "/api/media/a", width: 1, height: 1 }] },
+        { images: [{ src: "/api/media/a", width: 1, height: 1 }] },
+      ]),
+    ),
+    [],
+  );
+});

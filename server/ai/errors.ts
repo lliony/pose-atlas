@@ -22,3 +22,14 @@ export class AiError extends Error {
     this.status = definitions[code][0];
   }
 }
+
+/**
+ * 把抛出的任意错误归一到可安全下发的 AiError（固定消息、不泄漏上游正文）。
+ * 客户端主动取消/断开（AbortError）没有可响应的对象，返回 null，由调用方直接收尾、
+ * 不把它当成一次上游失败（否则取消会被误报成 502）。
+ */
+export function classifyAiFailure(error: unknown): AiError | null {
+  if (error instanceof DOMException && error.name === "AbortError") return null;
+  if (error instanceof AiError) return new AiError(error.code);
+  return new AiError("UPSTREAM_FAILED");
+}

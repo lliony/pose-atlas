@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { State, Card } from "../../lib/types";
 import type { AiConfig, AiImage, AiMode, AiScope } from "../../lib/ai-types";
 import { buildCandidates } from "../../lib/ai-model";
-import { validPersonalConfig } from "../../lib/ai-ui";
+import { validPersonalConfig } from "../../lib/ai-guard";
 import { createRequestSession } from "../../lib/ai-request-session";
 import { createConfigStore } from "../../services/ai-config";
 import { getAiAvailability } from "../../services/ai";

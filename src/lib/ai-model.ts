@@ -107,3 +107,20 @@ export function addRecommendations(
     ),
   };
 }
+
+/**
+ * 在结果展示时把推荐筛成「此刻仍然可选」的集合，并预构建卡片/分类查询表，
+ * 避免每次选择切换都重跑 buildCandidates（含 JSON.stringify 字符预算）以及逐行 find。
+ * 范围本身失效时（册/分类被删）会像 buildCandidates 一样抛错，由界面区分显示。
+ */
+export function selectableRows(
+  state: State,
+  scope: AiScope,
+  recommendations: AiResult["recommendations"],
+) {
+  const ids = new Set(buildCandidates(state, scope).map((c) => c.id));
+  const rows = recommendations.filter((r) => ids.has(r.cardId));
+  const cards = new Map(state.cards.map((c) => [c.id, c]));
+  const categoryById = new Map(state.categories.map((c) => [c.id, c.name]));
+  return { rows, cards, categoryById };
+}

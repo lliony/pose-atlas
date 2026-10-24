@@ -17,6 +17,8 @@ import {
 } from '../lib/image-ratio';
 import { IMAGE_MAX_EDGE } from '../lib/image-compression';
 import { loadImageSettings } from '../lib/image-settings';
+import { persistDraft } from '../lib/edit-draft';
+import { MAX_CARD_IMAGES, canAddImages } from '../lib/card-image-count';
 import {
   labels,
   uid,
@@ -110,10 +112,9 @@ export default function Editor({
       setCropping(false);
     }
   };
+  // 只在确有改动时才写草稿，避免打开未改也留下可恢复标记（dirty 由 update/upload 等先置位）。
   useEffect(() => {
-    try {
-      localStorage.setItem(draftKey, JSON.stringify(value));
-    } catch {}
+    persistDraft(localStorage, draftKey, value, dirty.current);
   }, [value, draftKey]);
   // 从「详情 → 添加照片」进来时，直接把上传区滚到眼前
   useEffect(() => {
@@ -240,8 +241,8 @@ export default function Editor({
   };
   async function upload(files: FileList | null) {
     if (!files) return;
-    if (files.length + value.images.length > 20) {
-      setError("每张卡片最多20张图片");
+    if (!canAddImages(value.images.length, files.length)) {
+      setError(`每张卡片最多${MAX_CARD_IMAGES}张图片`);
       return;
     }
     setError("");
@@ -309,7 +310,7 @@ export default function Editor({
           <section className="editor-media">
             <div className="section-heading">
               <h3>参考图片</h3>
-              <span>{value.images.length} / 20</span>
+              <span>{value.images.length} / {MAX_CARD_IMAGES}</span>
             </div>
             {photo ? (
               <div

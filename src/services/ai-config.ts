@@ -219,7 +219,6 @@ export function createConfigStore(
       if (!value.draft) value.draft = clean.id;
       profiles = value;
       if (remember) persistProfiles();
-      else profilesRemembered = profilesRemembered || false;
     },
     removeProfile(id: string): void {
       const value = readProfiles();

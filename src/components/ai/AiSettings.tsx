@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { AiConfig } from "../../lib/ai-types";
 import type { AiProfile } from "../../services/ai-config";
 import { createConfigStore } from "../../services/ai-config";
-import { validPersonalConfig } from "../../lib/ai-ui";
+import { validPersonalConfig } from "../../lib/ai-guard";
 import { testAiConfig } from "../../services/ai";
 import { confirmAction } from "../Confirm";
 

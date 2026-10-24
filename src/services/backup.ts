@@ -1,30 +1,18 @@
 import { api, type Workspace } from "./api";
-import { clear, keys, read, write } from "./storage";
+import { keys, read, remove, write } from "./storage";
 import { stateSources } from "../lib/image-refs";
+import { restoreFromBackup } from "../lib/backup-restore";
+import { dataUrlToBlob, blobToDataUrl } from "../lib/data-url";
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   backupFileName,
   backupStats,
-  mergeStates,
   type BackupFile,
   type BackupStats,
 } from "../lib/backup";
 import { packBackup, unpackBackup } from "../lib/backup-package";
 import { sanitizeState } from "../lib/export-sanitize";
-
-const blobToDataUrl = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("读取本机图片失败"));
-    reader.readAsDataURL(blob);
-  });
-
-const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => {
-  const response = await fetch(dataUrl);
-  return response.blob();
-};
 
 /** 打包当前工作区；includeImages=false 时只带文字（体积小，适合频繁备份）。 */
 export async function collectBackup(
@@ -50,22 +38,25 @@ export async function collectBackup(
   };
 }
 
-/** 恢复备份；replace 覆盖本机数据，merge 按 id 合并（备份里的条目优先）。 */
+/** 恢复备份；replace 覆盖本机数据，merge 按 id 合并（备份里的条目优先）。
+ * 先把图片落盘、再提交工作区，提交成功后才会清理（写失败或提交失败都不会破坏已有图片库）。*/
 export async function restoreBackup(
   backup: BackupFile,
   mode: "merge" | "replace",
 ): Promise<BackupStats> {
   const current = await api<Workspace>("workspace", "GET");
-  const nextState =
-    mode === "merge" ? mergeStates(current.state, backup.state) : backup.state;
-  if (mode === "replace") await clear("images");
-  for (const [src, dataUrl] of Object.entries(backup.images)) {
-    await write("images", src, await dataUrlToBlob(dataUrl));
-  }
-  await api("workspace", "PUT", {
-    state: nextState,
-    revision: current.revision,
-  });
+  await restoreFromBackup(
+    backup,
+    mode,
+    {
+      readWorkspace: () => Promise.resolve({ revision: current.revision, state: current.state }),
+      listImageKeys: async () => (await keys("images")).filter((s) => s.startsWith("/api/media/")),
+      writeImage: async (src, dataUrl) => write("images", src, await dataUrlToBlob(dataUrl)),
+      removeImage: async (src) => remove("images", src),
+      commitWorkspace: (state, revision) =>
+        api("workspace", "PUT", { state, revision }),
+    },
+  );
   return backupStats(backup);
 }
 

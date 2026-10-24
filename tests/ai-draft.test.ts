@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createProvider, normalizeDraft } from "../server/ai/provider.ts";
+import { createProvider } from "../server/ai/provider.ts";
+import { normalizeDraft } from "../server/ai/model-parse.ts";
 
 test("AI 草稿会被裁剪、去重并只保留允许的选项", () => {
   const draft = normalizeDraft({

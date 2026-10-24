@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CARD_RATIOS, GENDERS, STYLES, normalizeAppearance, matchesPerson, type CardAppearance } from './lib/card-appearance';
-import { RATIO_KEYS, cardRatioKeys, aspectOf, type PhotoSize, type RatioKey } from './lib/image-ratio';
+import { RATIO_KEYS, cardRatioKeys, aspectOf, srcsNeedingMeasurement, type PhotoSize, type RatioKey } from './lib/image-ratio';
 import AiRecommendation from "./components/ai/AiRecommendation";
 import { createConfigStore } from "./services/ai-config";
 import seed from "./lib/seed.json";
@@ -63,14 +63,18 @@ export default function Atlas({ shareId }: { shareId?: string }) {
   const [ratioFilter,setRatioFilter] = useState<'全部'|RatioKey>('全部');
   const [styleFilter,setStyleFilter] = useState('全部');
   useEffect(()=>{try{localStorage.setItem('pose-atlas:appearance',JSON.stringify(appearance));}catch{}},[appearance]);
-  // 量出每张图的原始尺寸：按比例筛选、按比例排版都靠它（不再裁切）
+  // 量出每张图的原始尺寸：按比例筛选、按比例排版都靠它（不再裁切）。
+  // 只解码真正缺失 width/height 的图（上传时会记录尺寸，这里主要是种子/旧数据），
+  // 并按 src 缓存——正常保存不会再触发一次全库重新测量与解码。
+  const measuredSizes = useRef<Map<string, PhotoSize>>(new Map());
   useEffect(() => {
+    const needed = srcsNeedingMeasurement(state.cards);
+    const toMeasure = needed.filter((src) => !measuredSizes.current.has(src));
+    if (!toMeasure.length) return;
     let alive = true;
-    const srcs = new Set<string>();
-    state.cards.forEach((c) => c.images.forEach((p) => srcs.add(p.src)));
     void (async () => {
       const entries = await Promise.all(
-        [...srcs].map(async (src) => {
+        toMeasure.map(async (src) => {
           try {
             const url = await resolveImageUrl(src, shareId);
             const size = await new Promise<PhotoSize | null>((resolve) => {
@@ -80,16 +84,26 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               img.onerror = () => resolve(null);
               img.src = url;
             });
-            return size ? ([src, size] as [string, PhotoSize]) : null;
+            if (size) {
+              measuredSizes.current.set(src, size);
+              return [src, size] as [string, PhotoSize];
+            }
+            return null;
           } catch {
             return null;
           }
         }),
       );
-      if (alive)
-        setSizes(
-          new Map(entries.filter((e): e is [string, PhotoSize] => e !== null)),
+      if (alive) {
+        const fresh = entries.filter(
+          (e): e is [string, PhotoSize] => e !== null,
         );
+        setSizes((prev) =>
+          fresh.length
+            ? new Map([...(prev ?? new Map()), ...fresh])
+            : prev,
+        );
+      }
     })();
     return () => {
       alive = false;

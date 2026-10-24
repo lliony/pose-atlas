@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validPersonalConfig } from "../src/lib/ai-ui.ts";
+import { validPersonalConfig } from "../src/lib/ai-guard.ts";
 test("personal configuration requires complete HTTPS credentials", () => {
   assert.equal(validPersonalConfig(null), false);
   for (const baseUrl of [

@@ -54,6 +54,10 @@ test('size errors use fixed guidance without exposing upstream body', async () =
 test('single wrapping JSON fence is accepted', async () => {
   assert.deepEqual(await adapter(reply('```json\n' + JSON.stringify(result) + '\n```')).recommend(config, input, new AbortController().signal), result);
 });
+test('fenced JSON with prose before and after is still parsed', async () => {
+  const content = 'Sure!\n```json\n' + JSON.stringify(result) + '\n```\nHope this helps.';
+  assert.deepEqual(await adapter(reply(content)).recommend(config, input, new AbortController().signal), result);
+});
 test('timeout and cancellation settle even when transport ignores abort', async () => {
   const api = createProvider({ transport: () => new Promise(() => {}), timeoutMs: 10 });
   await assert.rejects(api.recommend(config, input, new AbortController().signal), { code: 'TIMEOUT' });

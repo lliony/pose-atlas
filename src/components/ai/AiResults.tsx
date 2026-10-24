@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { State, Card } from "../../lib/types";
 import type { AiScope, AiResult } from "../../lib/ai-types";
-import { buildCandidates, addRecommendations } from "../../lib/ai-model";
+import { selectableRows, addRecommendations } from "../../lib/ai-model";
 import PoseCard from "../PoseCard";
 export default function AiResults({
   state,
@@ -19,34 +19,43 @@ export default function AiResults({
   const [selected, setSelected] = useState<Set<string>>(new Set()),
     [album, setAlbum] = useState(""),
     [busy, setBusy] = useState(false),
-    [message, setMessage] = useState("");
-  let valid = new Set<string>();
-  try {
-    valid = new Set(buildCandidates(state, scope).map((c) => c.id));
-  } catch {
-    /* expired scope has no selectable results */
-  }
-  const rows = result.recommendations.filter((r) => valid.has(r.cardId));
+    // 结果提示与角色（status/alert）分开存，避免用「消息文案是否等于成功句」来推断 ARIA 角色。
+    [notice, setNotice] = useState<{ text: string; ok: boolean } | null>(null);
+  // 只在 state/scope/result 变化时重算一次；选择切换不应触发整库候选重建（O(cards) + JSON 预算）。
+  const selectable = useMemo(() => {
+    try {
+      return { error: "", ...selectableRows(state, scope, result.recommendations) };
+    } catch (e) {
+      return {
+        error: e instanceof Error ? e.message : "推荐范围已失效，请重新发起推荐",
+        rows: [] as AiResult["recommendations"],
+        cards: new Map<string, Card>(),
+        categoryById: new Map<string, string>(),
+      };
+    }
+  }, [state, scope, result]);
+  const { rows, cards, categoryById, error } = selectable;
   return (
     <section className="ai-results">
       <h3>推荐结果</h3>
       <p>{result.sceneSummary}</p>
-      {!rows.length && <p>当前没有有效推荐，请调整描述或范围后重试。</p>}
+      {error ? (
+        <p role="alert">{error}</p>
+      ) : !rows.length ? (
+        <p>当前没有有效推荐，请调整描述或范围后重试。</p>
+      ) : null}
       <div className="ai-result-grid">
         {rows.map((row) => {
-          const card = state.cards.find((c) => c.id === row.cardId)!;
+          const card = cards.get(row.cardId)!;
           return (
             <div key={row.cardId}>
               <PoseCard
                 card={card}
-                category={
-                  state.categories.find((c) => c.id === card.categoryId)
-                    ?.name || ""
-                }
+                category={categoryById.get(card.categoryId) || ""}
                 selected={selected.has(card.id)}
                 readonly
                 onSelect={() => {
-                  setMessage("");
+                  setNotice(null);
                   setSelected((old) => {
                     const next = new Set(old);
                     next.has(card.id)
@@ -78,7 +87,7 @@ export default function AiResults({
           value={album}
           onChange={(e) => {
             setAlbum(e.target.value);
-            setMessage("");
+            setNotice(null);
           }}
         >
           <option value="">选择卡片册</option>
@@ -97,7 +106,7 @@ export default function AiResults({
         }
         onClick={async () => {
           setBusy(true);
-          setMessage("");
+          setNotice(null);
           try {
             await onSave(
               addRecommendations(
@@ -106,9 +115,12 @@ export default function AiResults({
                 rows.filter((r) => selected.has(r.cardId)).map((r) => r.cardId),
               ),
             );
-            setMessage("已加入卡片册");
+            setNotice({ text: "已加入卡片册", ok: true });
           } catch (e) {
-            setMessage(e instanceof Error ? e.message : "保存失败");
+            setNotice({
+              text: e instanceof Error ? e.message : "保存失败",
+              ok: false,
+            });
           } finally {
             setBusy(false);
           }
@@ -116,8 +128,8 @@ export default function AiResults({
       >
         {busy ? "正在保存…" : "加入卡片册"}
       </button>
-      {message && (
-        <p role={message === "已加入卡片册" ? "status" : "alert"}>{message}</p>
+      {notice && (
+        <p role={notice.ok ? "status" : "alert"}>{notice.text}</p>
       )}
     </section>
   );

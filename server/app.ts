@@ -2,10 +2,15 @@ import http from 'node:http';
 import type { AiConfig } from '../src/lib/ai-types.ts';
 import { AI_LIMITS } from '../src/lib/ai-types.ts';
 import type { draft, recommend, testConnection } from './ai/provider.ts';
-import { AiError } from './ai/errors.ts';
+import { AiError, classifyAiFailure } from './ai/errors.ts';
 import { validateDraftRequest, validatePersonalConfig, validateRequest } from './ai/validation.ts';
 
 type Options = { defaultConfig?: AiConfig; allowedOrigins: string[]; recommend: typeof recommend; draft?: typeof draft; testConnection: typeof testConnection };
+
+/** 读取请求体的唯一超时来源：到期拒绝为 AiError('TIMEOUT')，由接口以 504 下发。
+ * 服务器层不再单独设置 requestTimeout，避免两套 15s 竞态、丢 socket 而没有干净的 JSON 错误。 */
+const BODY_TIMEOUT_MS = 15_000;
+
 function send(res: http.ServerResponse, status: number, body: unknown) {
   if (res.destroyed || res.writableEnded) return;
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -14,7 +19,7 @@ function send(res: http.ServerResponse, status: number, body: unknown) {
 async function readBody(req: http.IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = []; let bytes = 0;
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => { cleanup(); req.resume(); reject(new AiError('TIMEOUT')); }, 15000);
+    const timer = setTimeout(() => { cleanup(); req.resume(); reject(new AiError('TIMEOUT')); }, BODY_TIMEOUT_MS);
     const cleanup = () => { clearTimeout(timer); req.off('data', data); req.off('end', end); req.off('error', error); req.off('aborted', aborted); };
     const error = () => { cleanup(); reject(new AiError('INVALID_INPUT')); };
     const aborted = () => error();
@@ -68,15 +73,16 @@ export function createAiServer(options: Options): http.Server {
       } else if (input) send(res, 200, await options.recommend(config, input, controller.signal));
       else { await options.testConnection(config, controller.signal); send(res, 200, { ok: true }); }
     } catch (error) {
-      // Reconstruct known errors so a mutated/provider message can never expose secrets.
-      const safe = new AiError(error instanceof AiError ? error.code : 'UPSTREAM_FAILED');
-      send(res, safe.status, { error: safe.message, code: safe.code });
+      // 归一到固定消息后再下发；客户端取消（AbortError）没有可响应的对象，直接收尾不下发。
+      const safe = classifyAiFailure(error);
+      if (safe) send(res, safe.status, { error: safe.message, code: safe.code });
     } finally {
       if (acquired) active--;
       req.off('aborted', abort); res.off('close', responseClosed);
     }
   });
-  server.requestTimeout = 15000;
+  // 请求体超时统一由 readBody 的 BODY_TIMEOUT_MS 处理，向客户端下发干净的 504；
+  // 因此不再单独设 server.requestTimeout（与 in-code 定时器竞态会直接丢 socket）。
   server.headersTimeout = 10000;
   return server;
 }
