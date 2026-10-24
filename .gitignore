@@ -8,4 +8,5 @@ dist/
 .npm-cache/
 .playwright-cli/
 .superpowers/
+.wrangler/
 output/

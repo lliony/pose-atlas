@@ -80,20 +80,21 @@ AI_MODEL=视觉模型名
 
 ## 五、现成配置样例
 
-### Cloudflare Pages + Render（免费）
+### Cloudflare Workers + Render（免费）
 
 仓库已带两份配置，无需改代码：
 
-- `public/_redirects`：SPA 回退（`/api/ai/*` 由 `functions/` 接管，不经过回退）
-- `functions/api/ai/[[path]].ts`：把 `/api/ai/*` 反代到 Render，Origin 改写为上游 origin
+- `wrangler.jsonc`：静态资产托管 `./dist`，`not_found_handling: single-page-application` 提供 SPA 回退；`run_worker_first: ["/api/ai/*"]` 让 AI 请求先进 Worker
+- `worker/index.ts`：把 `/api/ai/*` 反代到 Render，Origin 改写为上游 origin
 - `render.yaml`：Render Blueprint，免费 Web Service 跑 `server/index.ts`
 
-部署顺序（先 Render 后 Pages，拿到地址再填变量）：
+> 不要再加 `public/_redirects`：SPA 回退已由 Workers 内置处理，叠加 `/* /index.html 200` 会被判无限循环（code 100324）拒绝部署。
+
+部署顺序（先 Render 后 Cloudflare，拿到地址再填变量）：
 
 1. **Render**：New → Blueprint → 选本仓库，按 `render.yaml` 创建 `pose-atlas-ai`。若改名，同步改 `AI_ALLOWED_ORIGINS` 与服务域名一致。
-2. **Cloudflare Pages**：连接仓库，构建命令 `npm ci && npm run build`，产物目录 `dist`，环境变量：
+2. **Cloudflare**：Workers & Pages → Create → Import repository 选本仓库；检测到 `wrangler.jsonc` 后按它部署，构建命令 `npm run build`。部署成功后在 Settings → Variables and Secrets 加：
    - `AI_UPSTREAM=https://pose-atlas-ai.onrender.com`（Render 实际地址）
-   - `VITE_HIDE_DEMO=1`（可选）
 3. 验证：`curl https://你的域名/api/ai/config` 应返回 `{"defaultAvailable":false}`；页面「系统设置」填入个人模型配置后可用。
 
 密钥策略：Render 不配 `AI_API_KEY`，系统默认模型关闭，访客在浏览器自填 key（仅存各自 localStorage），公网没有可盗用的额度。
@@ -148,8 +149,8 @@ npm run preview   # http://127.0.0.1:4174，带 /api/ai 代理
 
 ## 七、常见坑
 
-- **线上 AI 首次请求等 30–60 秒**：Render 免费档闲置 15 分钟休眠，冷启动期间 Pages Function 一起等待，属预期；之后的请求恢复正常。
+- **线上 AI 首次请求等 30–60 秒**：Render 免费档闲置 15 分钟休眠，冷启动期间 Worker 一起等待，属预期；之后的请求恢复正常。
 - **AI 一直 404**：AI 服务没启动，或跑的是旧进程（旧进程没有新接口）。重启 AI 服务即可，与前端无关。
-- **AI 返回 403「请求来源不允许」**：自建反代（如 Nginx）时 `AI_ALLOWED_ORIGINS` 与页面实际域名（协议+域名+端口）不一致；Pages + Render 方案下则应与 Render 服务自身域名一致（见 `render.yaml`）。
+- **AI 返回 403「请求来源不允许」**：自建反代（如 Nginx）时 `AI_ALLOWED_ORIGINS` 与页面实际域名（协议+域名+端口）不一致；Workers + Render 方案下则应与 Render 服务自身域名一致（见 `render.yaml`）。
 - **改了 `VITE_*` 没生效**：这些变量在**构建时**注入，改完要重新 `npm run build`。
 - **换设备看不到自己的卡片**：本机模式的预期行为，卡片没有离开浏览器。
