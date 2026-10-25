@@ -1,4 +1,5 @@
 import type { AiConfig } from "../lib/ai-types.ts";
+import { isAiProtocol } from "../lib/ai-types.ts";
 
 export type AiProfile = AiConfig & { id: string; name: string };
 export type AiFeature = "recommend" | "draft";
@@ -14,6 +15,7 @@ function copy(config: AiConfig): AiConfig {
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
     model: config.model,
+    ...(config.protocol !== undefined ? { protocol: config.protocol } : {}),
   };
 }
 
@@ -31,7 +33,8 @@ const isConfig = (value: unknown): value is AiConfig => {
   return (
     typeof config.baseUrl === "string" &&
     typeof config.apiKey === "string" &&
-    typeof config.model === "string"
+    typeof config.model === "string" &&
+    (config.protocol === undefined || isAiProtocol(config.protocol))
   );
 };
 

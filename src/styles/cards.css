@@ -45,6 +45,9 @@
 .style-options label input { width:auto; margin:0; flex:none; }
 .style-options legend { padding:0 6px; }
 .card-grid { align-items:start; }
+.detail-content .photo-frame { align-self:start; aspect-ratio:auto; }
+.detail-content .photo-frame > img { width:100%; height:auto; object-fit:contain; }
+.detail-content .photo-frame > svg { width:100%; height:auto; aspect-ratio:var(--detail-aspect, auto); }
 .pose-card .flip-shell { display:block; position:relative; aspect-ratio:var(--card-aspect, 3 / 4); }
 .pose-card .face { position:absolute; inset:0; }
 .pose-card .front { padding:6px; display:block; }

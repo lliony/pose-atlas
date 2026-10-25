@@ -5,7 +5,11 @@ export type AiScope =
   | { kind: "all" }
   | { kind: "album"; id: string }
   | { kind: "category"; id: string };
-export type AiConfig = { baseUrl: string; apiKey: string; model: string };
+export type AiProtocol = "openai" | "anthropic";
+export function isAiProtocol(value: unknown): value is AiProtocol {
+  return value === "openai" || value === "anthropic";
+}
+export type AiConfig = { baseUrl: string; apiKey: string; model: string; protocol?: AiProtocol };
 export type AiSelection =
   | { kind: "default" }
   | { kind: "personal"; config: AiConfig };

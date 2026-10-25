@@ -97,12 +97,15 @@ export async function image(value: unknown): Promise<AiImage> {
 }
 export function validatePersonalConfig(value: unknown): AiConfig {
   const config = object(value);
-  const clean = {
+  if (config.protocol !== undefined && config.protocol !== "openai" && config.protocol !== "anthropic")
+    throw new AiError("INVALID_INPUT");
+  const clean: AiConfig = {
     baseUrl: string(config.baseUrl, 2048, true),
     apiKey: string(config.apiKey, 4096, true),
     model: string(config.model, 256, true),
+    ...(config.protocol !== undefined ? { protocol: config.protocol } : {}),
   };
-  parseEndpoint(clean.baseUrl);
+  parseEndpoint(clean.baseUrl, clean.protocol);
   return clean;
 }
 export async function validateRequest(value: unknown): Promise<AiRequest> {

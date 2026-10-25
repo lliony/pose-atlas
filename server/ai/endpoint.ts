@@ -2,6 +2,7 @@ import dns from "node:dns/promises";
 import { isIP } from "node:net";
 import ipaddr from "ipaddr.js";
 import { AiError } from "./errors.ts";
+import type { AiProtocol } from "../../src/lib/ai-types.ts";
 
 export function isPublicAddress(address: string): boolean {
   try {
@@ -14,7 +15,7 @@ export function isPublicAddress(address: string): boolean {
     return false;
   }
 }
-export function parseEndpoint(baseUrl: string): URL {
+export function parseEndpoint(baseUrl: string, protocol: AiProtocol = "openai"): URL {
   try {
     if (
       typeof baseUrl !== "string" ||
@@ -31,9 +32,10 @@ export function parseEndpoint(baseUrl: string): URL {
     )
       throw new Error();
     const path = url.pathname.replace(/\/+$/, "");
-    url.pathname = path.endsWith("/chat/completions")
+    const suffix = protocol === "anthropic" ? "/messages" : "/chat/completions";
+    url.pathname = path.endsWith(suffix)
       ? path
-      : `${path}/chat/completions`;
+      : `${path || (protocol === "anthropic" ? "/v1" : "")}${suffix}`;
     return url;
   } catch {
     throw new AiError("UNSAFE_ENDPOINT");
@@ -41,8 +43,9 @@ export function parseEndpoint(baseUrl: string): URL {
 }
 export async function resolveEndpoint(
   baseUrl: string,
+  protocol: AiProtocol = "openai",
 ): Promise<{ url: URL; address: string; family: 4 | 6 }> {
-  const url = parseEndpoint(baseUrl);
+  const url = parseEndpoint(baseUrl, protocol);
   const hostname = url.hostname.replace(/^\[|\]$/g, "");
   try {
     const literalFamily = isIP(hostname);

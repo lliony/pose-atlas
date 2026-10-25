@@ -12,6 +12,7 @@ const blank = (): AiProfile => ({
   baseUrl: "",
   apiKey: "",
   model: "",
+  protocol: "openai",
 });
 
 export default function AiSettings({
@@ -184,13 +185,24 @@ export default function AiSettings({
         />
       </label>
       <label>
+        接口格式
+        <select
+          value={draft.protocol ?? "openai"}
+          onChange={(e) => update("protocol", e.target.value)}
+        >
+          <option value="openai">OpenAI 兼容（Chat Completions）</option>
+          <option value="anthropic">Anthropic（Messages）</option>
+        </select>
+      </label>
+      <label>
         基础地址
         <input
           value={draft.baseUrl}
-          placeholder="https://api.example.com/v1"
+          placeholder={draft.protocol === "anthropic" ? "https://api.anthropic.com/v1" : "https://api.openai.com/v1"}
           onChange={(e) => update("baseUrl", e.target.value)}
         />
       </label>
+      <p className="helper">填写服务商的基础地址（通常以 /v1 结尾），也支持所选格式的完整接口地址。切换格式后请核对地址、密钥与模型。</p>
       <label>
         API key
         <input

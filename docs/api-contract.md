@@ -51,7 +51,9 @@
 }
 ```
 
-个人服务将 `selection` 换为 `{"kind":"personal","config":{"baseUrl":"https://provider.example/v1","apiKey":"fake-key","model":"vision-demo"}}`。`mode` 可为 `scene` 或 `reference`；`scope` 可为 `{"kind":"all"}`、`{"kind":"album","id":"..."}` 或 `{"kind":"category","id":"..."}`。`candidates` 是当前范围内未删除卡片的教学资料白名单，不能包含私人备注、来源、库内图片二进制或密钥。上游使用 OpenAI Chat Completions 消息协议，服务端拒绝内部地址、非 HTTPS 地址和重定向。
+个人服务将 `selection` 换为 `{"kind":"personal","config":{"baseUrl":"https://provider.example/v1","apiKey":"fake-key","model":"vision-demo","protocol":"openai"}}`。`mode` 可为 `scene` 或 `reference`；`scope` 可为 `{"kind":"all"}`、`{"kind":"album","id":"..."}` 或 `{"kind":"category","id":"..."}`。`candidates` 是当前范围内未删除卡片的教学资料白名单，不能包含私人备注、来源、库内图片二进制或密钥。服务端拒绝内部地址、非 HTTPS 地址和重定向。
+
+`protocol` 支持 `openai`（OpenAI Chat Completions，旧配置省略时的默认值）和 `anthropic`（Anthropic Messages）。连接测试、推荐、填充共用该选择。模型档案可分别指定给推荐或填充。基础地址通常填到 `/v1`，也支持对应格式的完整 `/chat/completions` 或 `/messages` 地址；Anthropic 使用 `x-api-key` 与 `anthropic-version` 请求头，图片转为 base64 source，回复提取文本块。系统默认模型可通过 `AI_PROTOCOL=openai|anthropic` 设置协议，不填时沿用 OpenAI。修改后需同时部署前端和 AI 后端。
 
 ```json
 {

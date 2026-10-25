@@ -1,8 +1,10 @@
 import { createAiServer } from './app.ts';
 import { draft, recommend, testConnection } from './ai/provider.ts';
+import { isAiProtocol } from '../src/lib/ai-types.ts';
 
-const { AI_BASE_URL, AI_API_KEY, AI_MODEL } = process.env;
-const defaultConfig = AI_BASE_URL && AI_API_KEY && AI_MODEL ? { baseUrl: AI_BASE_URL, apiKey: AI_API_KEY, model: AI_MODEL } : undefined;
+const { AI_BASE_URL, AI_API_KEY, AI_MODEL, AI_PROTOCOL } = process.env;
+if (AI_PROTOCOL && !isAiProtocol(AI_PROTOCOL)) throw new Error('AI_PROTOCOL must be openai or anthropic');
+const defaultConfig = AI_BASE_URL && AI_API_KEY && AI_MODEL ? { baseUrl: AI_BASE_URL, apiKey: AI_API_KEY, model: AI_MODEL, protocol: isAiProtocol(AI_PROTOCOL) ? AI_PROTOCOL : undefined } : undefined;
 
 // 默认仍是回环地址；只有显式设置 HOST / AI_ALLOWED_ORIGINS 才会对外提供服务。
 const host = process.env.HOST?.trim() || '127.0.0.1';

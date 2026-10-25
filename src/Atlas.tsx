@@ -1021,7 +1021,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
         >
           <div className="detail-content">
             {detail.images.map((p) => (
-              <section key={p.id}>
+              <section key={p.id} style={{ "--detail-aspect": aspectOf(p, sizes, "auto") } as CSSProperties}>
                 <Photo image={p} title={detail.title} shareId={shareId} />
                 <div>
                   {Object.entries(labels).map(([key, label]) => (
