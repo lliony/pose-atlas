@@ -10,7 +10,6 @@ import {
 import { IMAGE_MAX_EDGE } from "../lib/image-compression";
 import { loadImageSettings, saveImageSettings } from "../lib/image-settings";
 import Dialog from "./Dialog";
-import ThemeSwitch from "./ThemeSwitch";
 import AiSettings from "./ai/AiSettings";
 import BackupPanel from "./BackupPanel";
 
@@ -130,8 +129,9 @@ export default function SystemSettings({
       <div className="dialog-content ai-panel system-settings">
         <section>
           <h3>显示偏好</h3>
-          <p className="helper">设置会保存在当前浏览器。</p>
-          <ThemeSwitch />
+          <p className="helper">
+            配色方案已移到顶栏切换；其余偏好保存在当前浏览器。
+          </p>
           <label className="ai-check">
             <input
               type="checkbox"

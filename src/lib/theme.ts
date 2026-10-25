@@ -11,8 +11,8 @@ export type ThemeOption = {
 };
 
 export const THEMES: readonly ThemeOption[] = [
-  { id: "paper", name: "纸本", hint: "暖纸 + 陶土橙", dot: "#f7f1e7" },
   { id: "white", name: "白墙", hint: "纯白 + 陶土红", dot: "#ffffff" },
+  { id: "paper", name: "纸本", hint: "暖纸 + 陶土橙", dot: "#f7f1e7" },
   { id: "dark", name: "暗房", hint: "深褐 + 琥珀", dot: "#17120e" },
 ];
 
@@ -27,12 +27,12 @@ export function normalizeTheme(value: unknown): Theme | null {
     : null;
 }
 
-/** 已保存的选择优先；没有选择时跟随系统深浅色。 */
+/** 已保存的选择优先；没有选择时跟随系统深浅色（浅色默认白墙）。 */
 export function resolveTheme(
   stored: string | null | undefined,
   systemDark: boolean,
 ): Theme {
-  return normalizeTheme(stored) ?? (systemDark ? "dark" : "paper");
+  return normalizeTheme(stored) ?? (systemDark ? "dark" : "white");
 }
 
 export function readStoredTheme(): Theme | null {
@@ -61,7 +61,7 @@ export function systemPrefersDark(): boolean {
 
 /** 读取当前生效的主题：以 document 上已应用的值为准，保证与首屏脚本一致。 */
 export function getCurrentTheme(): Theme {
-  if (typeof document === "undefined") return "paper";
+  if (typeof document === "undefined") return "white";
   return (
     normalizeTheme(document.documentElement.dataset.theme) ??
     resolveTheme(readStoredTheme(), systemPrefersDark())

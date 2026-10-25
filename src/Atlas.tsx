@@ -17,6 +17,7 @@ import { resolveNotes } from "./lib/model";
 import { sanitizePublication, sanitizeState } from "./lib/export-sanitize";
 import PoseCard from "./components/PoseCard";
 import SystemSettings from "./components/SystemSettings";
+import ThemeSwitch from "./components/ThemeSwitch";
 import Photo from "./components/Photo";
 import Dialog from "./components/Dialog";
 import Editor from "./components/Editor";
@@ -417,6 +418,7 @@ export default function Atlas({ shareId }: { shareId?: string }) {
             灵感库 <i>/</i> {shareId ? "公开卡片册" : "个人摄影工作台"}
           </span>
           <div className="topbar-actions">
+            <ThemeSwitch compact />
             {signed ? (
               <span className="account">
                 <b />{" "}
@@ -594,10 +596,10 @@ export default function Atlas({ shareId }: { shareId?: string }) {
               </div>
               {view !== "albums" && (
                 <div className="card-display-controls" aria-label="卡片显示与人物筛选">
-                  <label>图片比例<select aria-label="图片比例" value={ratioFilter} onChange={e=>setRatioFilter(e.target.value as '全部'|RatioKey)}><option value="全部">全部</option>{RATIO_KEYS.map(r=><option key={r} value={r}>{r}</option>)}</select></label>
-                  <label>卡片边框<select value={appearance.frame} onChange={e=>setAppearance({...appearance,frame:e.target.value as CardAppearance['frame']})}><option value="thin">细边框</option><option value="none">无边框</option></select></label>
-                  <label>人物性别<select value={gender} onChange={e=>setGender(e.target.value)}>{['全部',...GENDERS,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
-                  <label>气质风格<select value={styleFilter} onChange={e=>setStyleFilter(e.target.value)}>{['全部',...STYLES,'未分类'].map(x=><option key={x}>{x}</option>)}</select></label>
+                  <label>图片比例<span className="select-field"><select aria-label="图片比例" value={ratioFilter} onChange={e=>setRatioFilter(e.target.value as '全部'|RatioKey)}><option value="全部">全部</option>{RATIO_KEYS.map(r=><option key={r} value={r}>{r}</option>)}</select></span></label>
+                  <label>卡片边框<span className="frame-segment" role="group" aria-label="卡片边框">{(['thin','none'] as const).map(frame=><button type="button" key={frame} aria-pressed={appearance.frame===frame} onClick={()=>setAppearance({...appearance,frame})}>{frame==='thin'?'细边框':'无边框'}</button>)}</span></label>
+                  <label>人物性别<span className="select-field"><select aria-label="人物性别" value={gender} onChange={e=>setGender(e.target.value)}>{['全部',...GENDERS,'未分类'].map(x=><option key={x}>{x}</option>)}</select></span></label>
+                  <label>气质风格<span className="select-field"><select aria-label="气质风格" value={styleFilter} onChange={e=>setStyleFilter(e.target.value)}>{['全部',...STYLES,'未分类'].map(x=><option key={x}>{x}</option>)}</select></span></label>
                   {(gender !== '全部' || styleFilter !== '全部' || ratioFilter !== '全部') && (
                     <label className="clear-filters-item">
                       <span>已筛选</span>

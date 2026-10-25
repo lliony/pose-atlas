@@ -14,7 +14,7 @@
       /* 首帧前定好主题，避免闪白：?theme > 本地保存 > 系统深浅色 */
       (function () {
         var allowed = ["paper", "white", "dark"];
-        var theme = "paper";
+        var theme = "white";
         try {
           var fromQuery = new URLSearchParams(location.search).get("theme");
           var stored = localStorage.getItem("pose-atlas:theme");
@@ -23,7 +23,7 @@
           else if (window.matchMedia("(prefers-color-scheme: dark)").matches)
             theme = "dark";
         } catch (error) {
-          theme = "paper";
+          theme = "white";
         }
         document.documentElement.dataset.theme = theme;
       })();

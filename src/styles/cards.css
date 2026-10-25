@@ -2,6 +2,43 @@
 .card-display-controls { display:flex; flex-wrap:wrap; align-items:end; gap:14px; padding:18px 0 0; }
 .card-display-controls label { display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--muted); }
 .card-display-controls select { min-height:40px; min-width:120px; color:var(--ink); }
+/* 过滤下拉统一为"描边 + 自定义箭头"，箭头随主题取色（mask）贴合所选文字 */
+.card-display-controls .select-field { position:relative; display:block; width:100%; }
+.card-display-controls .select-field::after {
+  content:""; position:absolute; right:12px; top:50%; width:10px; height:6px; margin-top:-3px;
+  pointer-events:none;
+  background-color:var(--muted);
+  -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/></svg>") center/contain no-repeat;
+          mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/></svg>") center/contain no-repeat;
+}
+.card-display-controls select {
+  width:100%; min-width:120px; min-height:42px;
+  appearance:none; -webkit-appearance:none;
+  padding:0 34px 0 12px;
+  border-color:var(--line); border-radius:7px;
+  background-color:var(--chip-bg); background-image:none;
+  color:var(--ink); font-size:13px; cursor:pointer;
+  transition:border-color .15s, background-color .15s;
+}
+.card-display-controls select:hover { border-color:var(--line-strong); background-color:var(--surface); }
+.card-display-controls select:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+/* 卡片边框只有两态，做成分段开关比下拉更直观 */
+.card-display-controls .frame-segment {
+  display:inline-flex; align-items:center; gap:2px; padding:3px;
+  min-height:42px; width:100%;
+  border:1px solid var(--line); border-radius:7px; background-color:var(--chip-bg);
+}
+.card-display-controls .frame-segment button {
+  flex:1 1 0; min-height:34px; padding:0 10px;
+  border:0; border-radius:5px; background:transparent;
+  color:var(--muted); font-size:12px; white-space:nowrap; cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.card-display-controls .frame-segment button:hover { color:var(--ink); }
+.card-display-controls .frame-segment button[aria-pressed="true"] {
+  background:var(--surface); color:var(--ink);
+  box-shadow:0 1px 2px var(--shadow-color), inset 0 0 0 1px var(--line-strong);
+}
 .style-options { border:1px solid var(--line); padding:12px; margin-bottom:18px; }
 .style-options label { display:inline-flex; align-items:center; gap:6px; margin:6px 14px 6px 0; }
 /* 全局 label input 有 margin-top:7px，会把复选框按下去，这里归零对齐 */

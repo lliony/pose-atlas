@@ -11,8 +11,9 @@ import {
  * 三档配色切换器。
  * - 手动切换会写入 localStorage，并停止跟随系统；
  * - 从未手动选择过时，系统深浅色变化会实时同步。
+ * - `compact`（顶栏用）：只显示三个色点，不放文字标签。
  */
-export default function ThemeSwitch() {
+export default function ThemeSwitch({ compact = false }: { compact?: boolean }) {
   const [theme, setTheme] = useState<Theme>(getCurrentTheme);
 
   useEffect(() => {
@@ -27,7 +28,11 @@ export default function ThemeSwitch() {
   }, []);
 
   return (
-    <div className="theme-switch" role="group" aria-label="配色方案">
+    <div
+      className={"theme-switch" + (compact ? " theme-switch--compact" : "")}
+      role="group"
+      aria-label="配色方案"
+    >
       {THEMES.map((option) => (
         <button
           key={option.id}
@@ -42,7 +47,7 @@ export default function ThemeSwitch() {
             style={{ background: option.dot }}
             aria-hidden="true"
           />
-          <span className="lbl">{option.name}</span>
+          {!compact && <span className="lbl">{option.name}</span>}
         </button>
       ))}
     </div>
