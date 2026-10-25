@@ -1,0 +1,19 @@
+# Render Blueprint：AI 服务（免费 Web Service）。
+# 注意：name 决定服务域名；改名后需同步 AI_ALLOWED_ORIGINS 与 Pages 的 AI_UPSTREAM。
+services:
+  - type: web
+    name: pose-atlas-ai
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: node --experimental-strip-types server/index.ts
+    healthCheckPath: /api/ai/config
+    envVars:
+      - key: NODE_VERSION
+        value: "22.13.0"
+      - key: HOST
+        value: "0.0.0.0"
+      # server/app.ts 要求 Host/Origin 命中该集合；Pages Function 会把 Origin 改写为本服务 origin。
+      - key: AI_ALLOWED_ORIGINS
+        value: https://pose-atlas-ai.onrender.com
+      # 不配 AI_BASE_URL/AI_API_KEY/AI_MODEL：系统默认模型关闭，由访客在页面自填个人 key。

@@ -80,6 +80,10 @@ AI_MODEL=视觉模型名
 
 ## 五、现成配置样例
 
+### Cloudflare Workers + Render（免费）
+
+完整步骤见 [参考部署：Cloudflare Workers + Render](deploy-cloudflare-workers.md)——仓库已带 `wrangler.jsonc`、`worker/index.ts`、`render.yaml`，零代码改动即可上线，密钥由访客自填。
+
 ### Nginx（静态 + AI 反代）
 
 ```nginx
@@ -130,7 +134,8 @@ npm run preview   # http://127.0.0.1:4174，带 /api/ai 代理
 
 ## 七、常见坑
 
+- **线上 AI 首次请求等 30–60 秒**：Render 免费档闲置 15 分钟休眠，冷启动期间 Worker 一起等待，属预期；之后的请求恢复正常。
 - **AI 一直 404**：AI 服务没启动，或跑的是旧进程（旧进程没有新接口）。重启 AI 服务即可，与前端无关。
-- **AI 返回 403「请求来源不允许」**：`AI_ALLOWED_ORIGINS` 与页面实际域名（协议+域名+端口）不一致。
+- **AI 返回 403「请求来源不允许」**：自建反代（如 Nginx）时 `AI_ALLOWED_ORIGINS` 与页面实际域名（协议+域名+端口）不一致；Workers + Render 方案下则应与 Render 服务自身域名一致（见 `render.yaml`）。
 - **改了 `VITE_*` 没生效**：这些变量在**构建时**注入，改完要重新 `npm run build`。
 - **换设备看不到自己的卡片**：本机模式的预期行为，卡片没有离开浏览器。

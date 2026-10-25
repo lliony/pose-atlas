@@ -1,7 +1,7 @@
 /* Shared photo-first card layout; ratio is selected once for the workspace. */
 .card-display-controls { display:flex; flex-wrap:wrap; align-items:end; gap:14px; padding:18px 0 0; }
-.card-display-controls label { display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--muted); }
-.card-display-controls select { min-height:40px; min-width:120px; color:var(--ink); }
+.card-display-controls label { display:flex; flex-direction:column; align-items:flex-start; gap:6px; font-size:11px; color:var(--muted); }
+.card-display-controls select { min-height:40px; color:var(--ink); }
 .style-options { border:1px solid var(--line); padding:12px; margin-bottom:18px; }
 .style-options label { display:inline-flex; align-items:center; gap:6px; margin:6px 14px 6px 0; }
 /* 全局 label input 有 margin-top:7px，会把复选框按下去，这里归零对齐 */
@@ -43,7 +43,7 @@
 .pose-card.selected .front { outline:3px solid var(--accent); outline-offset:2px; }
 [data-card-ratio="4:3"] .card-grid, [data-card-ratio="16:9"] .card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 @media(min-width:1700px){[data-card-ratio="4:3"] .card-grid,[data-card-ratio="16:9"] .card-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
-@media(max-width:760px){[data-card-ratio="4:3"] .card-grid,[data-card-ratio="16:9"] .card-grid{grid-template-columns: minmax(0,1fr);}.card-display-controls{gap:10px}.card-display-controls label{flex:1 1 135px}.card-display-controls select{width:100%;min-width:0}}
+@media(max-width:760px){[data-card-ratio="4:3"] .card-grid,[data-card-ratio="16:9"] .card-grid{grid-template-columns: minmax(0,1fr);}.card-display-controls{gap:10px}.card-display-controls label{flex:1 1 135px}}
 
 /* 编辑器的图片比例提示与裁切 */
 .ratio-check {

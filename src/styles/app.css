@@ -241,12 +241,22 @@ html[data-theme="dark"] .check-btn.checked {
   input,
   textarea,
   select {
-    width: 100%;
     border: 1px solid var(--line);
     border-radius: 5px;
     padding: 10px 12px;
     background: var(--surface);
     color: var(--ink);
+  }
+  input,
+  textarea {
+    width: 100%;
+  }
+  /* 原生箭头贴在盒子右边缘：满宽会把箭头推到行尾，与所选文字脱节 */
+  select {
+    width: auto;
+    max-width: 100%;
+    /* 按当前选中项而非最宽选项计量；不支持的浏览器退回上面的 auto */
+    field-sizing: content;
   }
   textarea {
     resize: vertical;
@@ -2034,4 +2044,8 @@ body[data-grid="on"] .photo-frame:not(.hero-visual .photo-frame)::after {
   margin: 16px 0 10px;
   font-size: 12px;
   letter-spacing: .4px;
+}
+/* 两个模型下拉按内容并排，不平分整行 */
+.ai-settings .form-row label {
+  flex: none;
 }
