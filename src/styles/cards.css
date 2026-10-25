@@ -53,7 +53,8 @@
 .pose-card .photo-flip-trigger:focus-visible { outline:3px solid var(--focus); outline-offset:-4px; }
 .pose-card .front .card-meta, .pose-card .front .card-caption, .pose-card .front .card-bottom, .pose-card .ratio-badge { pointer-events:none; }
 .pose-card .front .card-meta button, .pose-card .front .card-caption button, .pose-card .front .card-bottom button { pointer-events:auto; }
-.pose-card .card-top-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.pose-card .card-top-actions { display:flex; align-items:center; gap:0; flex-shrink:0; }
+.pose-card .card-top-actions .check-btn { width:24px; }
 .pose-card .back-flip-content { display:flex; flex-direction:column; flex:1; min-height:0; cursor:pointer; }
 .pose-card .back-flip-content:focus-visible { outline:3px solid var(--focus); outline-offset:-4px; }
 @media (prefers-reduced-motion: reduce) { .pose-card .flip-shell { transition:none; } }
@@ -61,8 +62,9 @@
 .pose-card .front .card-meta { position:absolute; z-index:2; top:6px; left:6px; right:6px; border:0; color:white; background:linear-gradient(#0006,transparent); padding:8px 10px; height:40px; }
 .pose-card .front .card-meta > span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .pose-card .front .pose-code { background:#0005; color:white; }
-.pose-card .check-btn { flex-shrink:0; width:30px; height:30px; padding:0; border-radius:50%; font-size:14px; background:#fffcf5; color:#292c24; border:1px solid #aaa; }
-.pose-card .front .check-btn.checked { background:var(--accent); color:white; }
+.pose-card .check-btn { flex-shrink:0; width:30px; height:30px; padding:0; border-radius:50%; font-size:14px; background:transparent; color:var(--ink); border:0; }
+.pose-card .front .check-btn { color:white; }
+.pose-card .front .check-btn.checked { background:transparent; color:white; }
 .pose-card .front .card-caption { position:absolute; z-index:1; bottom:6px; left:6px; right:6px; padding:42px 14px 46px; color:white; background:linear-gradient(transparent,#000b); }
 .pose-card .front .card-title h3 { font-size:18px; line-height:1.4; text-shadow:0 1px 3px #0006; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
 .pose-card .front .tags { color:#ffffffe0; margin:4px 0 0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
