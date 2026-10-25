@@ -46,33 +46,35 @@ export default function PoseCard({
             <span>
               <span className="pose-code">{card.code}</span> <span>{category}</span>
             </span>
-            {!actions && (
-              <button
-                className={"check-btn " + (selected ? "checked" : "")}
-                onClick={onSelect}
-                aria-pressed={selected}
-                aria-label={"选择 " + card.title}
-              >
-                {selected ? "✓" : "+"}
+            <div className="card-top-actions">
+              {!actions && (
+                <button
+                  className={"check-btn " + (selected ? "checked" : "")}
+                  onClick={onSelect}
+                  aria-pressed={selected}
+                  aria-label={"选择 " + card.title}
+                >
+                  {selected ? "✓" : "+"}
+                </button>
+              )}
+              <button className="check-btn card-detail-btn" onClick={onRead} aria-label={"查看详情：" + card.title} title="查看详情">
+                ↗
               </button>
-            )}
+            </div>
           </div>
           <Photo image={photo} title={card.title} shareId={shareId} />
+          <button
+            type="button"
+            className="photo-flip-trigger"
+            onClick={() => setFlipped(true)}
+            aria-label={"翻面查看笔记：" + card.title}
+          />
           {size && !ratioLabel && (
             <span className="ratio-badge">非标准比例</span>
           )}
           <div className="card-caption">
             <div className="card-title">
               <h3>{card.title}</h3>
-              {!readonly && (
-                <button
-                  className="icon-btn edit-icon"
-                  onClick={onEdit}
-                  aria-label={"编辑 " + card.title}
-                >
-                  ↗
-                </button>
-              )}
             </div>
             <p className="tags">
               {[...new Set([...(card.gender ? [card.gender] : []), ...(card.styles || []), ...card.tags])].join(" · ")} <span> / </span> {card.images.length}{" "}
@@ -107,9 +109,6 @@ export default function PoseCard({
                 ›
               </button>
             </div>
-            <button className="flip-btn" onClick={() => setFlipped(true)}>
-              ↻ 翻面看详解
-            </button>
           </div>
         </section>
         <section className="face back" aria-hidden={!flipped} inert={!flipped}>
@@ -117,8 +116,23 @@ export default function PoseCard({
             <span>
               {card.code} / 第 {index + 1} 张
             </span>
-            <span className="eyebrow">FIELD NOTES</span>
+            <button className="check-btn card-detail-btn" onClick={onRead} aria-label={"查看详情：" + card.title} title="查看详情">
+              ↗
+            </button>
           </div>
+          <div
+            className="back-flip-content"
+            role="button"
+            tabIndex={0}
+            aria-label={"翻回图片：" + card.title}
+            onClick={() => setFlipped(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setFlipped(false);
+              }
+            }}
+          >
           <div className="back-title">
             <span className="eyebrow">每一个动作，都有思路</span>
             <h3>{card.title}</h3>
@@ -134,16 +148,13 @@ export default function PoseCard({
               </div>
             ))}
           </div>
+          </div>
           <div className="back-actions">
-            <button onClick={onRead}>展开完整说明 ↗</button>
             {!readonly && (
               <button className="text-btn" onClick={onEdit}>
                 编辑
               </button>
             )}
-            <button className="flip-btn" onClick={() => setFlipped(false)}>
-              ↻ 返回图片
-            </button>
           </div>
         </section>
       </div>
