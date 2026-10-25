@@ -43,6 +43,8 @@
    - `AI_UPSTREAM=https://pose-atlas-ai.onrender.com`（第一步的实际地址）
 4. 保存变量会触发再部署，等它完成。
 
+仓库的 `wrangler.jsonc` 已设置 `"keep_vars": true`，后续代码部署会保留控制台配置的普通变量（包括 `AI_UPSTREAM`）。如果变量此前已被部署清除，需要在控制台重新添加一次；该选项不会恢复已删除的值。请添加到 Worker 的运行时 Variables and Secrets，而不是仅添加到构建环境变量。
+
 ## 第三步：验证
 
 ```bash

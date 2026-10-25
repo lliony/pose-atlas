@@ -3,6 +3,7 @@
   "name": "pose-atlas",
   "compatibility_date": "2026-10-19",
   "main": "worker/index.ts",
+  "keep_vars": true,
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
