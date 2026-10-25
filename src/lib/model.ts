@@ -124,7 +124,7 @@ export function validateState(s: State) {
       id(p.id);
       if (
         typeof p.src !== "string" ||
-        !/^\/(images\/(street|cafe|park|sea|indoor|stairs|pose-reference-styles)\.png|api\/media\/[a-zA-Z0-9_-]+)$/.test(
+        !/^\/(images\/(street|cafe|park|sea|indoor|stairs|pose-reference-styles)\.png|images\/reference-20261025\/(daily|everyday|travel|lifestyle)-[1-6]\.jpg|api\/media\/[a-zA-Z0-9_-]+)$/.test(
           p.src,
         )
       )

@@ -13,16 +13,16 @@ test('reference addition is immutable, idempotent and preserves user edits/delet
   const original: State = {cards:[],categories:[],albums:[]};
   const next=addReferenceCards(original);
   assert.equal(original.cards.length,0);
-  assert.equal(next.cards.length,6);
+  assert.equal(next.cards.length,30);
   next.cards[0].deleted=true; next.cards[1].title='用户修改';
   const again=addReferenceCards(next);
-  assert.equal(again.cards.length,6); assert.equal(again.cards[0].deleted,true);
+  assert.equal(again.cards.length,30); assert.equal(again.cards[0].deleted,true);
   assert.equal(again.cards[1].title,'用户修改');
   assert.equal(validateState(again),true);
 });
 test('gender and style filtering compose, and old cards remain unclassified', () => {
   const s=addReferenceCards({cards:[],categories:[],albums:[]});
-  assert.equal(s.cards.filter(c=>matchesPerson(c,'男性','全部')).length,3);
+  assert.equal(s.cards.filter(c=>c.id.startsWith('style-reference-') && matchesPerson(c,'男性','全部')).length,3);
   assert.equal(s.cards.filter(c=>matchesPerson(c,'女性','优雅')).length,1);
   const old={...s.cards[0],gender:undefined,styles:undefined};
   assert.equal(matchesPerson(old,'未分类','未分类'),true);

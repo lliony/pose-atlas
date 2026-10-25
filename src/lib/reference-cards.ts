@@ -1,4 +1,5 @@
 import type { State, Card } from './types.ts';
+import { sceneReferences } from './scene-references.ts';
 const rows = [
  ['女性','甜美','迎着阳光，轻轻走来','花园','放松肩膀，向镜头自然走来，手臂轻摆。','把人物放在绿植之间，让背景与人物保持距离。'],
  ['女性','优雅','坐下来，留一点从容','美术馆','侧身坐下，双腿自然收拢，手轻放膝上。','用建筑线条衬托坐姿，给视线方向留白。'],
@@ -7,7 +8,7 @@ const rows = [
  ['男性','斯文','翻一页书，停一会儿','图书馆','手持打开的书，视线自然落下，肩颈放松。','让窗光从侧面进入，保留书本与手部细节。'],
  ['男性','成熟','望向远处，迎着海风','海边','身体微侧，一手自然放松，视线越过镜头。','保持海平线水平，让环境衬托沉稳的状态。'],
 ];
-export function addReferenceCards(state: State): State {
+function addStyleReferenceCards(state: State): State {
  const categoryId='reference-styles-2026';
  const existing=new Set(state.cards.map(c=>c.id));
  const cards:Card[]=rows.map(([gender,style,title,scene,pose,composition],panel)=>({
@@ -18,4 +19,25 @@ export function addReferenceCards(state: State): State {
  if(!cards.length)return state;
  if(state.cards.length+cards.length>2000||(!state.categories.some(c=>c.id===categoryId)&&state.categories.length>=200))return state;
  return {...state,categories:state.categories.some(c=>c.id===categoryId)?state.categories:[...state.categories,{id:categoryId,name:'人物气质参考',code:'REF'}],cards:[...state.cards,...cards]};
+}
+
+/** Append missing built-in cards without replacing user edits or soft-deleted cards. */
+export function addReferenceCards(state: State): State {
+ let next = addStyleReferenceCards(state);
+ for (const category of sceneReferences.categories) {
+  const existing = new Set(next.cards.map(card => card.id));
+  const cards = sceneReferences.cards.filter(card => card.categoryId === category.id && !existing.has(card.id));
+  if (!cards.length) continue;
+  const needsCategory = !next.categories.some(item => item.id === category.id);
+  if (next.cards.length + cards.length > 2000 || (needsCategory && next.categories.length >= 200)) continue;
+  const album = sceneReferences.albums.find(item => item.cardIds.includes(cards[0].id))!;
+  const needsAlbum = !next.albums.some(item => item.id === album.id);
+  next = {
+   ...next,
+   categories: needsCategory ? [...next.categories, {...category}] : next.categories,
+   cards: [...next.cards, ...structuredClone(cards)],
+   albums: needsAlbum && next.albums.length < 200 ? [...next.albums, structuredClone(album)] : next.albums,
+  };
+ }
+ return next;
 }
